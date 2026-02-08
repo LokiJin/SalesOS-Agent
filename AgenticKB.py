@@ -1,15 +1,3 @@
-# """
-# Agent Implementation with Multiple Tools for llama.cpp
-
-# Installation:
-# pip install langgraph langchain-openai langchain-community chromadb sentence-transformers requests
-
-# Setup:
-# 1. Start llama.cpp server with a tool-enabled model, gpt-oss-20b-Q4_K_M.gguf is a confirmed example that works
-   
-# 2. Run this script
-# """
-
 from pathlib import Path
 import os
 import requests
@@ -60,7 +48,6 @@ DOCS_PATH = "Agentic KB/kb/"  # Path to your documents for RAG
 
 
 VECTORSTORE = None
-
 def init_vectorstore():
     global VECTORSTORE
     if VECTORSTORE is None:
@@ -122,21 +109,12 @@ def search_local_docs(query: str) -> str:
         if not os.path.exists(CHROMA_DB_PATH):
             return f"Local knowledge base not found at {CHROMA_DB_PATH}. Please set up your RAG database first."
         
-        #print(f"[DEBUG] Searching for: '{query}'")
         vectorstore = init_vectorstore()
         
-        # DEBUG: Check collection size
         collection = vectorstore._collection
         
         # Search for relevant documents
         docs = vectorstore.similarity_search(query, k=3)
-  
-        
-        # # DEBUG: Show what was found
-        # print(f"[DEBUG] Found {len(docs)} documents for query: '{query}'")
-        # for i, doc in enumerate(docs):
-        #     print(f"[DEBUG] Doc {i+1} source: {doc.metadata.get('source', 'Unknown')}")
-        #     print(f"[DEBUG] Doc {i+1} preview: {doc.page_content[:150]}...")
         
         if not docs:
             return "No relevant documents found in local knowledge base."
@@ -149,7 +127,6 @@ def search_local_docs(query: str) -> str:
             results.append(f"[Document {i}] From {source}:\n{content}")
         
         final_result = "\n\n---\n\n".join(results)
-        #print(f"[DEBUG] Returning {len(final_result)} characters of results")
         return final_result
     
     except Exception as e:
@@ -224,8 +201,7 @@ def setup_rag_database_incremental(
     documents_path: str, 
     db_path: str,
     metadata_db_path: str = None,
-    force_rebuild: bool = False
-):
+    force_rebuild: bool = False):
     """
     Setup or update RAG database with incremental change detection.
     
