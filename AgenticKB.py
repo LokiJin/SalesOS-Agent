@@ -10,6 +10,7 @@
 # 2. Run this script
 # """
 
+from pathlib import Path
 import os
 import requests
 from typing import List, Optional
@@ -18,35 +19,54 @@ from langchain_core.messages import HumanMessage
 from langchain_openai import ChatOpenAI
 from langchain.agents import create_agent
 from langchain_core.messages import HumanMessage, SystemMessage, ToolMessage
+from langgraph.checkpoint.memory import InMemorySaver
 
 # RAG setup 
-
+from rag_metadata import RAGMetadataManager
 from langchain_chroma import Chroma
 from langchain_huggingface import HuggingFaceEmbeddings
-from langchain_community.document_loaders import DirectoryLoader, TextLoader
+from langchain_community.document_loaders import (
+    TextLoader,
+    PyPDFLoader,
+    Docx2txtLoader,
+    UnstructuredMarkdownLoader,
+    CSVLoader,
+    JSONLoader,
+    UnstructuredHTMLLoader,
+)
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 
 # ============================================================================
 # Configuration
 # ============================================================================
+SUPPORTED_FILE_TYPES = {
+    '.txt': TextLoader,
+    '.pdf': PyPDFLoader,
+    '.docx': Docx2txtLoader,
+    '.md': UnstructuredMarkdownLoader,
+    '.csv': CSVLoader,
+    '.json': JSONLoader,
+    '.html': UnstructuredHTMLLoader,
+    '.htm': UnstructuredHTMLLoader,
+}
 
 os.environ['OPENAI_API_KEY'] = "not_a_real_key"  # Some models required a variable here, but is not actually used
 
 RAG_AVAILABLE = True
 LLAMA_SERVER_URL = "http://localhost:8080/v1/"
 MODEL_NAME = "gpt-oss-20b-Q4_K_M.gguf"  # Change to your model name
-CHROMA_DB_PATH = "chroma_db"  # Path for RAG database
-DOCS_PATH = "kb/"  # Path to your documents for RAG
+CHROMA_DB_PATH = "Agentic KB/chroma_db"  # Path for RAG database
+DOCS_PATH = "Agentic KB/kb/"  # Path to your documents for RAG
 
 
 VECTORSTORE = None
+
 def init_vectorstore():
     global VECTORSTORE
     if VECTORSTORE is None:
         embeddings = HuggingFaceEmbeddings(model_name="sentence-transformers/all-MiniLM-L6-v2")
         VECTORSTORE = Chroma(persist_directory=CHROMA_DB_PATH, embedding_function=embeddings)
     return VECTORSTORE
-
 
 
 # ============================================================================
@@ -99,16 +119,24 @@ def search_local_docs(query: str) -> str:
     """
     
     try:
-
         if not os.path.exists(CHROMA_DB_PATH):
             return f"Local knowledge base not found at {CHROMA_DB_PATH}. Please set up your RAG database first."
         
-      
+        #print(f"[DEBUG] Searching for: '{query}'")
         vectorstore = init_vectorstore()
-
-        docs = vectorstore.similarity_search(query, k=3, distance_metric="cosine")
+        
+        # DEBUG: Check collection size
+        collection = vectorstore._collection
+        
         # Search for relevant documents
-      
+        docs = vectorstore.similarity_search(query, k=3)
+  
+        
+        # # DEBUG: Show what was found
+        # print(f"[DEBUG] Found {len(docs)} documents for query: '{query}'")
+        # for i, doc in enumerate(docs):
+        #     print(f"[DEBUG] Doc {i+1} source: {doc.metadata.get('source', 'Unknown')}")
+        #     print(f"[DEBUG] Doc {i+1} preview: {doc.page_content[:150]}...")
         
         if not docs:
             return "No relevant documents found in local knowledge base."
@@ -117,12 +145,15 @@ def search_local_docs(query: str) -> str:
         results = []
         for i, doc in enumerate(docs, 1):
             source = doc.metadata.get('source', 'Unknown')
-            results.append(f"[Document {i}] {source}\n{doc.page_content}")
+            content = doc.page_content
+            results.append(f"[Document {i}] From {source}:\n{content}")
         
-        return "\n\n---\n\n".join(results)
+        final_result = "\n\n---\n\n".join(results)
+        #print(f"[DEBUG] Returning {len(final_result)} characters of results")
+        return final_result
     
     except Exception as e:
-        return f"Error searching local documents: {str(e)}"
+      return f"Error searching local documents: {str(e)}"
 
 
 @tool
@@ -140,8 +171,6 @@ def web_search_duckduckgo(query: str) -> str:
         headers = {'User-Agent': 'Agent/1.0'}
         response = requests.get(url, params=params, headers=headers, timeout=10)
         if response.status_code != 200:
-            print("DUCK DUCK DUCK GO", query, response)
-           
             return "Error: Unable to search the web at this time."
         
         data = response.json()
@@ -178,58 +207,224 @@ def web_search_duckduckgo(query: str) -> str:
 # RAG Setup Functions (Optional)
 # ============================================================================
 
-def setup_rag_database(documents_path: str, db_path: str):
+def get_loader_for_file(file_path: str):
     """
-    One-time setup to create RAG database from your documents.
+    Get appropriate loader for a file based on extension.
+    
+    Args:
+        file_path: Path to file
+        
+    Returns:
+        Loader class or None if unsupported
+    """
+    ext = Path(file_path).suffix.lower()
+    return SUPPORTED_FILE_TYPES.get(ext)
+
+def setup_rag_database_incremental(
+    documents_path: str, 
+    db_path: str,
+    metadata_db_path: str = None,
+    force_rebuild: bool = False
+):
+    """
+    Setup or update RAG database with incremental change detection.
     
     Args:
         documents_path: Path to folder containing your text documents
         db_path: Path where the Chroma database will be saved
+        metadata_db_path: Path to metadata SQLite database (defaults to db_path + '/metadata.db')
+        force_rebuild: If True, delete everything and rebuild from scratch
+        
+    Returns:
+        Dictionary with update statistics
     """
     if not RAG_AVAILABLE:
         print("RAG dependencies not installed. Skipping RAG setup.")
-        return False
+        return None
     
+    # Setup paths
+    if metadata_db_path is None:
+        metadata_db_path = os.path.join(db_path, "metadata.db")
+    
+    os.makedirs(db_path, exist_ok=True)
+    
+    # Initialize metadata manager
+    metadata_mgr = RAGMetadataManager(metadata_db_path)
+    
+    # Force rebuild if requested
+    if force_rebuild:
+        print("🔄 Force rebuild requested. Deleting existing database...")
+        import shutil
+        if os.path.exists(db_path):
+            shutil.rmtree(db_path)
+        os.makedirs(db_path, exist_ok=True)
+        metadata_mgr = RAGMetadataManager(metadata_db_path)  # Reinit
+    
+    # Check if documents folder exists
     if not os.path.exists(documents_path):
         print(f"Documents folder not found: {documents_path}")
         print("Creating example documents folder...")
         os.makedirs(documents_path, exist_ok=True)
-        
+        return {"status": "no_documents"}
     
-    print(f"Loading documents from {documents_path}...")
-    loader = DirectoryLoader(
-        documents_path,
-        glob="**/*.txt",
-        loader_cls=lambda path: TextLoader(path, encoding="utf-8")
-    )
-    documents = loader.load()
+   # Scan current files (ALL supported types)
+    print(f"📂 Scanning documents in {documents_path}...")
+    current_files = {}
+    supported_extensions = list(SUPPORTED_FILE_TYPES.keys())
     
-    if not documents:
-        print("No documents found. Add .txt files to the documents folder.")
-        return False
+    # for file_path in Path(documents_path).rglob("*.txt"):
+    #     file_path_str = str(file_path)
+    #     file_hash = metadata_mgr.compute_file_hash(file_path_str)
+    #     if file_hash:
+    #         current_files[file_path_str] = file_hash
+    for ext in supported_extensions:
+        for file_path in Path(documents_path).rglob(f"*{ext}"):
+            file_path_str = str(file_path)
+            file_hash = metadata_mgr.compute_file_hash(file_path_str)
+            if file_hash:
+                current_files[file_path_str] = file_hash
     
-    print(f"Loaded {len(documents)} documents. Splitting into chunks...")
-    text_splitter = RecursiveCharacterTextSplitter(
-        chunk_size=500,
-        chunk_overlap=100
-    )
-    splits = text_splitter.split_documents(documents)
+    if not current_files:
+        print(f"No supported files found. Supported types: {', '.join(supported_extensions)}")
+        return {"status": "no_documents"}
     
-    print(f"Creating embeddings and storing in {db_path}...")
+    print(f"Found {len(current_files)} files")
+    
+    # Get tracked files from metadata
+    tracked_files = metadata_mgr.get_all_tracked_files()
+    
+    # Determine what needs to be updated
+    new_files = set(current_files.keys()) - tracked_files
+    deleted_files = tracked_files - set(current_files.keys())
+    potentially_changed = tracked_files & set(current_files.keys())
+    
+    changed_files = set()
+    for file_path in potentially_changed:
+        current_hash = current_files[file_path]
+        stored_hash = metadata_mgr.get_stored_hash(file_path)
+        if current_hash != stored_hash:
+            changed_files.add(file_path)
+    
+    # Summary
+    stats = {
+        "total_files": len(current_files),
+        "new_files": len(new_files),
+        "changed_files": len(changed_files),
+        "deleted_files": len(deleted_files),
+        "unchanged_files": len(current_files) - len(new_files) - len(changed_files)
+    }
+    
+    print(f"\n📊 Change Detection:")
+    print(f"   New files: {stats['new_files']}")
+    print(f"   Changed files: {stats['changed_files']}")
+    print(f"   Deleted files: {stats['deleted_files']}")
+    print(f"   Unchanged files: {stats['unchanged_files']}")
+    
+    # If nothing to update, return early
+    if not new_files and not changed_files and not deleted_files:
+        print("\n✓ Database is up to date. No changes needed.")
+        return stats
+    
+    # Initialize embeddings and vectorstore
+    print(f"\n🔧 Loading vectorstore...")
     embeddings = HuggingFaceEmbeddings(
         model_name="sentence-transformers/all-MiniLM-L6-v2"
     )
-    
-    vectorstore = Chroma.from_documents(
-        documents=splits,
-        embedding=embeddings,
-        persist_directory=db_path, 
+    vectorstore = Chroma(
+        persist_directory=db_path,
+        embedding_function=embeddings,
         collection_metadata={"hnsw:space": "cosine"}
     )
     
-    print(f"✓ RAG database created successfully with {len(splits)} chunks!")
-    return True
-
+    # Handle deletions
+    if deleted_files:
+        print(f"\n🗑️  Deleting {len(deleted_files)} removed files...")
+        for file_path in deleted_files:
+            chunk_ids = metadata_mgr.delete_file_metadata(file_path)
+            if chunk_ids:
+                try:
+                    vectorstore.delete(ids=chunk_ids)
+                    print(f"   ✓ Deleted {len(chunk_ids)} chunks from {Path(file_path).name}")
+                except Exception as e:
+                    print(f"   ✗ Error deleting chunks for {file_path}: {e}")
+    
+    # Handle updates (changed files)
+    files_to_process = list(new_files | changed_files)
+    
+    if files_to_process:
+        print(f"\n📥 Processing {len(files_to_process)} files...")
+        
+        # Delete old chunks for changed files
+        for file_path in changed_files:
+            chunk_ids = metadata_mgr.get_chunk_ids(file_path)
+            if chunk_ids:
+                try:
+                    vectorstore.delete(ids=chunk_ids)
+                    print(f"   🔄 Updating {Path(file_path).name} (removed {len(chunk_ids)} old chunks)")
+                except Exception as e:
+                    print(f"   ✗ Error deleting old chunks for {file_path}: {e}")
+        
+        # Load and split documents
+        text_splitter = RecursiveCharacterTextSplitter(
+            chunk_size=500,
+            chunk_overlap=100
+        )
+        
+        total_chunks_added = 0
+        
+        for file_path in files_to_process:
+            try:
+                # Get appropriate loader for this file type
+                loader_class = get_loader_for_file(file_path)
+                if not loader_class:
+                    print(f"   ⚠️  Skipping {Path(file_path).name} (unsupported type)")
+                    continue
+                
+                # Load single file with appropriate loader
+                loader = loader_class(file_path)
+                docs = loader.load()
+                
+                # Split into chunks
+                splits = text_splitter.split_documents(docs)
+                
+                if not splits:
+                    continue
+                
+                # Generate unique chunk IDs
+                chunk_ids = [f"{file_path}_{i}" for i in range(len(splits))]
+                
+                # Add to vectorstore
+                vectorstore.add_documents(documents=splits, ids=chunk_ids)
+                
+                # Get file type
+                file_type = Path(file_path).suffix.lower().replace('.', '')
+                
+                # Update metadata
+                metadata_mgr.store_file_metadata(
+                    file_path,
+                    current_files[file_path],
+                    chunk_ids,
+                    file_type  # NEW: track file type
+                )
+                
+                total_chunks_added += len(splits)
+                status = "✓" if file_path in new_files else "🔄"
+                print(f"   {status} {Path(file_path).name} ({file_type}): {len(splits)} chunks")
+                
+            except Exception as e:
+                print(f"   ✗ Error processing {file_path}: {e}")
+                import traceback
+                traceback.print_exc()
+    
+    # Final stats
+    final_stats = metadata_mgr.get_stats()
+    stats.update(final_stats)
+    
+    print(f"\n✓ Database updated successfully!")
+    print(f"   Total files tracked: {final_stats['file_count']}")
+    print(f"   Total chunks: {final_stats['total_chunks']}")
+    
+    return stats
 
 # ============================================================================
 # Agent Setup
@@ -267,6 +462,8 @@ def create_agent_a(
             web_search_duckduckgo
         ]
     
+    #Add an in‑memory checkpointer 
+    checkpointer = InMemorySaver()
 
     # Create agent
     agent = create_agent(
@@ -274,10 +471,17 @@ def create_agent_a(
         tools_to_use,
         system_prompt="""You are a highly capable AI assistant with access to multiple tools. Always use the tools instead of guessing or making up information.
 
+        You are a highly capable AI assistant with access to multiple tools.
+
+**CRITICAL TOOL USAGE RULES:**
+1. ONLY call search_local_docs with keywords FROM THE USER'S CURRENT QUESTION
+2. DO NOT search for topics from previous conversations
+3. DO NOT search for random topics not mentioned by the user
+
 Available tools and when to use them:
 
 1. search_local_docs:
-   - Use **first** for any question.
+   - Use **first** for most questions.
    - Contains the most authoritative, curated, context-specific knowledge.
    - Use whenever the question could be answered by your local knowledge base.
 
@@ -298,7 +502,8 @@ Guidelines:
 - Always check tools in the following priority: search_local_docs → wiki_summary → web_search_duckduckgo.
 - Synthesize information from tools into a clear, concise, and factual answer.
 - If a tool returns no results or an error, try the next tool in the hierarchy.
-- Do not guess or fabricate answers."""
+- Do not guess or fabricate answers.""", 
+        checkpointer=checkpointer,
     )
     
     return agent
@@ -326,8 +531,16 @@ def ask(agent, question: str, verbose: bool = True) -> str:
         print(f"{'='*60}\n")
     
     try:
-        result = agent.invoke({"messages": [HumanMessage(content=question)]})
         
+        thread_config = {"configurable": {"thread_id": "my_thread"}} #TODO: make this more robust for user
+
+        result = agent.invoke(
+            {"messages": [HumanMessage(content=question)]},
+            thread_config
+            )
+        
+
+
         # Print tool calls if verbose
         if verbose:
             messages = result["messages"]
@@ -360,18 +573,14 @@ def ask(agent, question: str, verbose: bool = True) -> str:
 
 def main():
     """Main function with example usage"""
-    
-    print("🤖 Multi-Tool Agent for llama.cpp")
-    print("="*60)
-    
-    # Optional: Setup RAG database if it doesn't exist
-    if RAG_AVAILABLE and not os.path.exists(CHROMA_DB_PATH):
-        print("\n📚 RAG database not found. Setting up...")
-        setup_rag_database(DOCS_PATH, CHROMA_DB_PATH)
+
+    # Setup/Update RAG database 
+    if RAG_AVAILABLE:
+        print("\n📚 Checking RAG database...")
+        setup_rag_database_incremental(DOCS_PATH, CHROMA_DB_PATH)  
         print()
     
     # Create agent
-    print("🔧 Initializing agent...")
     agent = create_agent_a()
     print("✓ Agent ready!\n")
     
