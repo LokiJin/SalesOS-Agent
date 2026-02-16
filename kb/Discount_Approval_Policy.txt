@@ -1,0 +1,431 @@
+# Discount Approval Matrix
+## Pricing Authority and Approval Guidelines
+
+**Effective Date:** January 1, 2025  
+**Owner:** VP of Sales  
+**Classification:** Internal - Sales Team Only
+
+---
+
+## Standard Pricing Policy
+
+**Default Position:** Always start with list price. Discounts should be earned through larger commitments, not given freely.
+
+**Golden Rule:** Never volunteer a discount. Let the customer ask first, then use it as negotiation leverage.
+
+---
+
+## Discount Authority Levels
+
+### Account Executive (No Approval Required)
+**Maximum Discount:** 10%  
+**Conditions:**
+- Single-year commitment minimum
+- Standard payment terms (Net 30)
+- No custom contract terms
+- Total deal value <$50K
+
+**Example:**
+- List price: $36K annually
+- Max AE discount: $32,400 (10% off)
+
+### Regional Sales Manager (RSM) Approval Required
+**Maximum Discount:** 20%  
+**Conditions:**
+- Multi-year commitment (2+ years) OR
+- Deal size >$50K OR
+- Competitive displacement OR
+- Strategic account designation
+
+**Required Information:**
+- Competitor pricing (if applicable)
+- Business justification
+- Deal timeline and close date
+- Customer's budget authority confirmation
+
+**Approval SLA:** 24 hours
+
+**Example:**
+- List price: $72K annually (2-year deal)
+- Max RSM discount: $57,600 (20% off)
+
+### VP of Sales Approval Required
+**Maximum Discount:** 30%  
+**Conditions:**
+- 3+ year commitment AND
+- Deal size >$100K AND one of the following:
+  - Enterprise logo (Fortune 1000)
+  - Reference-able customer
+  - Market expansion opportunity
+  - Whale account (>$500K potential LTV)
+
+**Required Information:**
+- Complete MEDDPICC scorecard
+- Executive sponsor identified
+- Long-term expansion plan
+- Competitive analysis
+- Why 20% is insufficient
+
+**Approval SLA:** 48 hours
+
+**Example:**
+- List price: $150K annually (3-year deal = $450K)
+- Max VP discount: $315K (30% off)
+
+### CEO Approval Required
+**Maximum Discount:** >30%  
+**Conditions:**
+- Strategic partnership
+- Market-making opportunity
+- Board-level relationship
+- Requires co-marketing commitment
+- Exceptional circumstances only
+
+**Required Information:**
+- Executive briefing document
+- Long-term strategic value beyond revenue
+- Board discussion (for deals >$1M)
+
+**Approval SLA:** 5-7 business days
+
+---
+
+## Discount Justifications
+
+### Valid Reasons for Discounts
+
+**1. Multi-Year Commitment**
+- 2 years: Up to 10% discount
+- 3 years: Up to 15% discount
+- 4+ years: Up to 20% discount (requires VP approval)
+
+*Why we give this:* Guaranteed revenue, lower churn risk, predictable growth
+
+**2. Competitive Displacement**
+- Must have proof of competitor pricing
+- Discount to match TCO, not just sticker price
+- Maximum 20% without VP approval
+
+*Why we give this:* Win new logo, remove competitor from account
+
+**3. Deal Size / Volume**
+- $50K-$100K: Up to 15%
+- $100K-$250K: Up to 20%
+- $250K+: Up to 25% (requires VP)
+
+*Why we give this:* Economies of scale, larger commitment
+
+**4. Budget Constraints (End of Quarter/Year)**
+- Customer has budget expiring
+- Must close by specific date
+- Up to 15% to fit their budget
+
+*Why we give this:* Pull forward revenue, secure committed budget
+
+**5. Strategic Account**
+- Fortune 1000 company
+- High reference value (public case study rights)
+- Industry leader / market influencer
+- Up to 20%
+
+*Why we give this:* Logo value, market credibility, expansion opportunity
+
+**6. Early Payment**
+- Full year paid upfront: 5% additional discount
+- 2 years paid upfront: 10% additional discount
+
+*Why we give this:* Immediate cash flow, reduced collection risk
+
+### Invalid Reasons for Discounts
+
+❌ "They asked for one" - Not a reason  
+❌ "I need to hit quota" - Not the customer's problem  
+❌ "It's a nice company" - Irrelevant  
+❌ "I promised it already" - Never promise without approval  
+❌ "They're a small business" - Tier bronze exists for this  
+❌ "They're shopping around" - Compete on value, not price  
+❌ "I want to close faster" - Discounts don't accelerate deals  
+❌ "They already have a vendor" - So does everyone - prove ROI  
+
+---
+
+## Customer Tier Pricing Guidelines
+
+### Bronze Tier
+**Target Market:** <50 employees, <$10M revenue  
+**Standard Discount:** 0-5%  
+**Approval:** AE discretion  
+**Terms:** Net 30, annual pre-pay  
+
+**Positioning:** *"Our bronze tier is already value-priced for companies your size. The list price is fair and includes everything you need."*
+
+### Silver Tier
+**Target Market:** 50-250 employees, $10M-$50M revenue  
+**Standard Discount:** 5-15%  
+**Approval:** 5-10% AE, 10-15% RSM  
+**Terms:** Net 45, annual or quarterly  
+
+**Positioning:** *"For silver tier customers, we can offer volume pricing if you commit to a multi-year contract."*
+
+### Gold Tier
+**Target Market:** 250-1000 employees, $50M-$250M revenue  
+**Standard Discount:** 10-20%  
+**Approval:** 10-15% RSM, 15-20% VP  
+**Terms:** Net 60, flexible payment structures  
+
+**Positioning:** *"As a gold tier customer, you qualify for our enterprise pricing. Let me show you the options."*
+
+### Platinum Tier
+**Target Market:** 1000+ employees, $250M+ revenue  
+**Standard Discount:** 20-30%  
+**Approval:** VP or CEO  
+**Terms:** Custom (Net 90, quarterly, annual)  
+
+**Positioning:** *"For platinum tier customers, we create custom packages. Let's talk about your specific needs and build a program together."*
+
+---
+
+## Bundle Discounts
+
+When selling multiple products together, you can offer bundle discounts **in lieu of** standard discounts (not in addition to):
+
+### Software Bundles
+- **Enterprise Suite + Analytics:** 15% off combined price
+- **Enterprise Suite + Security Plus:** 12% off combined price
+- **All Software Products:** 20% off combined price
+
+### Hardware + Software
+- **Any Hardware + Software:** 10% off combined price
+- **Hardware + Implementation Service:** 15% off combined price
+
+### Services Attach
+- **Software + Support Package:** 10% off Support Package
+- **Software + Training (3+ sessions):** 20% off training
+
+**Rules:**
+- Bundle discounts replace standard discounts (don't stack)
+- All products must be purchased together
+- Same contract term for all products
+
+**Example:**
+- Enterprise Suite Pro: $3,600/year
+- Analytics Dashboard: $2,400/year
+- Combined List: $6,000/year
+- Bundle Discount (15%): $5,100/year
+
+---
+
+## Payment Term Discounts
+
+### Standard Terms: Net 30 (No Discount)
+
+### Extended Terms Discounts
+**Net 45:** No discount  
+**Net 60:** No discount (Gold+ only)  
+**Net 90:** No discount (Platinum only, requires CFO approval)  
+
+**Note:** Extended terms are a concession, not a discount reason. If they want Net 60 AND a discount, they need to give something in return.
+
+### Accelerated Payment Incentives
+**Pre-pay annually (instead of monthly):** 15% discount  
+**Pre-pay 2 years:** 25% discount  
+**Pre-pay 3 years:** 30% discount (VP approval)  
+
+**Why:** Cash flow is valuable. Incentivize upfront payment.
+
+---
+
+## Non-Standard Terms
+
+### Requires Legal Approval
+- Unlimited liability clauses
+- Termination for convenience
+- Custom IP ownership
+- Non-standard SLAs
+- Data residency requirements
+- Source code escrow
+
+### Requires Finance Approval
+- Payment in installments (>3)
+- Payment in non-USD currency
+- Net 90+ payment terms
+- Performance-based pricing
+- Revenue share arrangements
+
+### Requires VP/CEO Approval
+- Enterprise-wide unlimited licenses
+- White-label / OEM arrangements
+- Reseller / channel partnerships
+- Strategic partnership terms
+
+**Approval Timeline:** Allow 2-3 weeks for non-standard terms review and negotiation.
+
+---
+
+## Discount Negotiation Strategies
+
+### Instead of Discounting Price, Add Value
+
+**Option 1: Add More Services**
+*"I can't discount the software, but I can include 3 additional training sessions (normally $1,500 value) at no charge."*
+
+**Option 2: Add More Products**
+*"Instead of a discount, let me add Cloud Storage Premium (normally $1,200/year) for free for year one."*
+
+**Option 3: Extend Terms**
+*"I can't discount, but I can give you Net 60 payment terms instead of Net 30 to help with cash flow."*
+
+**Option 4: Include Future Features**
+*"I can't discount now, but I can give you beta access to our new [feature] launching in Q3, which you'd normally pay extra for."*
+
+### Trade Concessions
+
+If they want a discount, ask for something in return:
+
+**Trade 1: Longer Commitment**
+*"I can offer 15% off if you commit to 2 years instead of 1 year."*
+
+**Trade 2: Case Study Rights**
+*"I can offer 10% off if you agree to be a public reference and case study customer."*
+
+**Trade 3: Larger Deal**
+*"I can offer 20% off if you add [Product X] to bring the total to $50K."*
+
+**Trade 4: Faster Close**
+*"I can offer 10% off if you can sign by end of this week. After that, the offer expires."*
+
+**Trade 5: Executive Access**
+*"I can offer 15% off if your CEO will do a joint webinar with ours about [topic]."*
+
+---
+
+## Discount Request Process
+
+### Step 1: Customer Asks for Discount
+**DO NOT** immediately offer a discount or promise anything.
+
+**Say This:**
+*"Let me see what I can do. To help me get you the best possible pricing, can you share:*
+- *Your total budget for this project?*
+- *Your timeline for making a decision?*
+- *Are you evaluating other vendors?"*
+
+### Step 2: Document Business Justification
+Fill out the **Discount Request Form** in Salesforce:
+- Requested discount percentage
+- Business justification
+- Competitive situation
+- Customer commitment (contract term, deal size, etc.)
+- What you're getting in return
+
+### Step 3: Submit for Approval
+- <10%: No approval needed
+- 10-20%: Submit to RSM via Salesforce
+- 20-30%: Submit to VP via Salesforce
+- >30%: Email CEO directly with exec summary
+
+### Step 4: Follow Up
+- RSM approvals: 24 hours
+- VP approvals: 48 hours
+- CEO approvals: 5-7 days
+
+**Tip:** Give yourself buffer time. Don't tell customer "I'll have an answer tomorrow" when you need VP approval.
+
+### Step 5: Present to Customer
+**If Approved:**
+*"Great news - I was able to get approval for [discount amount]. This is contingent on [conditions: 2-year contract, case study, etc.]. Does this work for you?"*
+
+**If Denied:**
+*"I presented your case to leadership, but unfortunately we can't go below [approved amount]. However, I can [add value proposition]. Would that work?"*
+
+---
+
+## Common Mistakes to Avoid
+
+### ❌ Mistake #1: Discounting Too Early
+**Problem:** Customer hasn't even seen value yet, and you're cutting price.  
+**Fix:** Always demo and establish value before discussing price.
+
+### ❌ Mistake #2: Offering Discount Without Getting Something Back
+**Problem:** Discount given freely, nothing gained.  
+**Fix:** Trade every concession for a commitment.
+
+### ❌ Mistake #3: Promising Discount You Can't Deliver
+**Problem:** Told customer 25% off, RSM only approved 15%.  
+**Fix:** Never promise a specific discount without approval first.
+
+### ❌ Mistake #4: Discounting on First Ask
+**Problem:** Customer asks for 20% off, you immediately offer 15%.  
+**Fix:** Push back first. Understand why they need it. What's their budget?
+
+### ❌ Mistake #5: Not Documenting Approvals
+**Problem:** Verbal approval from manager, no paper trail, deal falls apart.  
+**Fix:** Always get approvals in writing via Salesforce.
+
+### ❌ Mistake #6: Stacking Discounts
+**Problem:** 15% volume discount + 10% multi-year + 5% early payment = 30% total  
+**Fix:** Discounts don't stack. Pick the best one or use bundles.
+
+---
+
+## Discount Approval Checklist
+
+Before requesting approval, ensure you have:
+
+- [ ] Complete MEDDPICC scorecard
+- [ ] Proof of competitive pricing (if applicable)
+- [ ] Customer's budget and timeline confirmed
+- [ ] Business justification documented
+- [ ] What you're getting in return (commitment, case study, etc.)
+- [ ] Deal size and contract term
+- [ ] Payment terms
+- [ ] Close date
+- [ ] Why standard pricing won't work
+
+**If you can't check all these boxes, you're not ready to request a discount.**
+
+---
+
+## FAQs
+
+**Q: Can I discount services (consulting, training, implementation)?**  
+A: No. Services are already priced at market rate and have thin margins. Don't discount services. Bundle them with software if needed.
+
+**Q: What if competitor is 30% cheaper?**  
+A: Compete on total cost of ownership (TCO), not sticker price. Their cheaper price often comes with higher implementation costs, more expensive add-ons, or per-user fees that add up.
+
+**Q: Can I give a discount to close a deal this quarter?**  
+A: Not a valid reason alone. If there's strategic value (large deal, strategic account, competitive win), then yes with proper approval.
+
+**Q: Customer says they only have $X budget, which is 25% less than our price.**  
+A: Two options: (1) Remove features to fit budget, (2) Show ROI to justify finding more budget. Don't automatically discount to meet their budget.
+
+**Q: What if I already told the customer a discounted price?**  
+A: You must honor what you promised or lose credibility. But learn from this - never quote price without approval. Better: "Let me check on that and get back to you."
+
+**Q: Can I give "friends and family" pricing?**  
+A: No. Everyone pays. Exceptions only for: current employees, non-profit organizations (separate pricing), or strategic partners (requires CEO approval).
+
+---
+
+## Contact for Questions
+
+**Discount Approvals:**  
+- RSM Level: Your manager directly
+- VP Level: sales-ops@company.com
+- CEO Level: c-level-deals@company.com
+
+**Pricing Questions:**  
+pricing@company.com
+
+**Contract Terms:**  
+legal@company.com
+
+---
+
+**Remember:** Discounts are not favors. They're business decisions. Make them strategically, not emotionally.
+
+---
+
+Last Updated: February 2025  
+Next Review: June 2025
