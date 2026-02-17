@@ -29,7 +29,7 @@ The Enterprise Suite Pro is our flagship business management platform designed f
 
 ---
 
-### Analytics Dashboard
+### Analytics Dashboard 
 **SKU:** SW-002  
 **List Price:** $199.99/month  
 **Category:** Software

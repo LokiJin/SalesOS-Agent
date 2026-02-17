@@ -7,7 +7,7 @@
 
 ---
 
-## Table of Contents
+## Table of Contents 
 
 1. [Sales Process](#sales-process)
 2. [Qualification Framework](#qualification-framework)

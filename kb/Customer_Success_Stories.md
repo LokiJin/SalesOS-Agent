@@ -47,7 +47,7 @@ TechManufacturing Co was managing production operations across three facilities 
 - Executives "flying blind" without real-time metrics
 - 2 FTE dedicated to compiling daily reports
 
-**What They Tried Before:**
+**What They Tried Before:** 
 They attempted to build a custom solution with an offshore dev team. After 9 months and $180K spent, they had a partially working system that required constant maintenance.
 
 #### The Solution

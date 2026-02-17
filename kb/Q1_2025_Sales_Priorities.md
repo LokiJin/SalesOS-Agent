@@ -35,7 +35,7 @@ Q1 2025 represents a critical quarter for the company. We're targeting **$15M in
 
 **Total Q1 Target:** $15M
 
-### Strategic Initiatives
+### Strategic Initiatives 
 
 **Initiative #1: Enterprise Expansion**
 - **Goal:** 8 new Fortune 1000 customers

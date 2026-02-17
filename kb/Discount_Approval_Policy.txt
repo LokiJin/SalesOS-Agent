@@ -37,7 +37,7 @@
 - Competitive displacement OR
 - Strategic account designation
 
-**Required Information:**
+**Required Information:** 
 - Competitor pricing (if applicable)
 - Business justification
 - Deal timeline and close date
