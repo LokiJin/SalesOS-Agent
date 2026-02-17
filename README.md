@@ -17,24 +17,6 @@ The agent receives the prompt as plain text input.
 ### 2. LLM Decides What Tools to Use
 The agent sends the prompt and tool descriptions to the LLM. The LLM **reasons** about what information it needs: actual Q1 sales (database) and the Q1 target (documents). The LLM outputs which tools to call and with what parameters.
 
-Agent (LangChain)          LLM (AI Model)
-     |                          |
-     |---(Question + Tools)---->|
-     |                          | [Thinks: I need SQL tool first]
-     |<---(Call SQL tool)-------|
-     |                          |
-[Executes SQL tool]             |
-     |                          |
-     |---(SQL results)--------->|
-     |                          | [Thinks: Now I need RAG tool]
-     |<---(Call RAG tool)-------|
-     |                          |
-[Executes RAG tool]             |
-     |                          |
-     |---(RAG results)--------->|
-     |                          | [Thinks: Now I can answer]
-     |<---(Final answer)--------|
-
 ### 3. Agent Calls the SQL Tool
 ```python
 @tool
