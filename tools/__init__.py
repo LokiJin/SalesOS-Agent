@@ -1,8 +1,8 @@
 """
 Tools package for Agentic KB
-Exports all available tools for the agent
+Exports all available tools for the agent 
 """
-
+ 
 from .sales_tool import query_sales_database
 from .knowledge_tool import search_local_docs
 from .web_tools import wiki_summary

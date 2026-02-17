@@ -64,7 +64,7 @@ def search_local_docs(query: str) -> str:
             )
         
         if DEBUG_MODE:
-            print(f"[RAG SEARCH] Query: '{query}'")
+            print(f"[RAG SEARCH] Query: '{query}'") 
         
         # Initialize vectorstore
         vectorstore = _init_vectorstore()

@@ -1,5 +1,5 @@
 """
-An AI assistant with sales data and knowledge base capabilities
+An AI assistant with sales data and knowledge base capabilities 
 """
 
 from typing import Optional, List

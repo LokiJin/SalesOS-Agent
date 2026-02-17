@@ -37,7 +37,7 @@ def query_sales_database(question: str) -> str:
     """
     Query the company sales database for business intelligence using natural language.
     
-    Use for questions about:
+    Use for questions about: 
     - Sales performance, revenue, trends
     - Customer data, orders, purchasing patterns  
     - Product performance, bestsellers

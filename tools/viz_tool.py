@@ -24,7 +24,7 @@ CHARTS_DIR.mkdir(exist_ok=True)
 
 @tool
 def create_chart(
-    data: str,
+    data: str, 
     chart_type: Literal["bar", "line", "pie", "scatter", "histogram"] = "bar",
     title: str = "Chart",
     x_label: str = "",

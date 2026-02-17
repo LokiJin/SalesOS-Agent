@@ -6,7 +6,7 @@ This project provides a baseline to explore a few core concepts of agentic AI: h
 
 ---
 
-## How It Works: Step-by-Step
+## How It Works: Step-by-Step 
 
 ### 1. You Ask a Question
 ```
@@ -263,22 +263,6 @@ Simple Python library, no separate server needed. Good for learning, can scale i
 
 ---
 
-## ⚠️ What This Doesn't Cover
-
-- Input validation and SQL injection prevention (only basic keyword blocking)
-- Error handling and retry logic (minimal exception handling)
-- Authentication or multi-user support
-- Rate limiting or cost controls
-- Production database connections (PostgreSQL, MySQL, etc.)
-- Async execution for better performance
-- Tool result caching
-- Evaluation and testing frameworks
-- Deployment and monitoring
-
-**These are intentional omissions**—this is a learning project focused on core concepts, not a production template.
-
----
-
 ## Common Issues
 
 **"No data in database"** → Run `python setup_sales_db.py` first
@@ -293,7 +277,7 @@ Simple Python library, no separate server needed. Good for learning, can scale i
 
 ## Next Steps
 
-Once you understand this:
+Maybe you can:
 - Add your own tools (email sender, API caller, etc.)
 - Experiment with different embedding models
 - Try LangGraph for multi-agent workflows
@@ -306,4 +290,4 @@ Once you understand this:
 
 MIT - Use this to learn and build your own projects.
 
-**Built for learning agentic AI concepts, not for production use.** 🚀
+**Built for learning agentic AI concepts, not for production use.** 

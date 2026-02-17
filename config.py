@@ -61,7 +61,7 @@ MIN_RAG_SCORE = 0.4 # Keep chunks with distance <= 0.3 (lower = better)
 # Agent Configuration
 # ============================================================================
 
-# Debug mode (shows detailed logs)
+# Debug mode (shows detailed logs) 
 DEBUG_MODE = False
 
 #Print SQL queries to console (can be noisy, so separate flag)

@@ -18,7 +18,7 @@ def wiki_summary(query: str) -> str:
     Fetch Wikipedia summary for general knowledge questions.
     
     Use for: historical facts, biographies, scientific concepts, definitions, company information, 
-    and other encyclopedic information to augment the local knowledge base.
+    and other encyclopedic information to augment the local knowledge base. 
     
     Use as a secondary source for company-specific info, current events.
     

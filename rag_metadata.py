@@ -32,7 +32,7 @@ class RAGMetadataManager:
                     ingested_at TIMESTAMP NOT NULL,
                     updated_at TIMESTAMP NOT NULL
                 )
-            """)
+            """) 
             
             conn.execute("""
                 CREATE TABLE IF NOT EXISTS chunk_metadata (

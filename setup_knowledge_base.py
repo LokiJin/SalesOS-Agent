@@ -102,7 +102,7 @@ def setup_knowledge_base(
         print(f"Supported types: {', '.join(supported_exts)}")
         return {"status": "no_documents"}
     
-    print(f"✅ Found {len(current_files)} files")
+    print(f"✅ Found {len(current_files)} files") 
     
     # Detect changes
     tracked_files = metadata_mgr.get_all_tracked_files()
