@@ -2,7 +2,7 @@
 
 **Learn how AI agents use multiple tools to answer questions by building a working sales assistant.**
 
-This project walks through the core concepts of agentic AI: how an LLM decides which tools to use, how vector search finds relevant documents, and how everything connects together. Not prod ready, just built for learning.
+This project provides a baseline to explore a few core concepts of agentic AI: how an LLM decides which tools to use, how vector search finds relevant documents, and how everything connects together. Not prod ready, just built for learning.
 
 ---
 
@@ -10,12 +10,30 @@ This project walks through the core concepts of agentic AI: how an LLM decides w
 
 ### 1. You Ask a Question
 ```
-User: "Did we hit our Q1 sales target?"
+User: "Did we hit our Q1 2025 sales target?"
 ```
-The agent receives your question as plain text input.
+The agent receives the prompt as plain text input.
 
-### 2. Agent Analyzes the Question (ReAct Pattern)
-The LLM reads the users question and the system prompt that describes available tools. It **reasons** about what information it needs: actual Q1 sales (database) and the Q1 target (documents). This thinking-then-acting loop is called the **ReAct pattern**.
+### 2. LLM Decides What Tools to Use
+The agent sends the prompt and tool descriptions to the LLM. The LLM **reasons** about what information it needs: actual Q1 sales (database) and the Q1 target (documents). The LLM outputs which tools to call and with what parameters.
+
+Agent (LangChain)          LLM (AI Model)
+     |                          |
+     |---(Question + Tools)---->|
+     |                          | [Thinks: I need SQL tool first]
+     |<---(Call SQL tool)-------|
+     |                          |
+[Executes SQL tool]             |
+     |                          |
+     |---(SQL results)--------->|
+     |                          | [Thinks: Now I need RAG tool]
+     |<---(Call RAG tool)-------|
+     |                          |
+[Executes RAG tool]             |
+     |                          |
+     |---(RAG results)--------->|
+     |                          | [Thinks: Now I can answer]
+     |<---(Final answer)--------|
 
 ### 3. Agent Calls the SQL Tool
 ```python
@@ -85,7 +103,7 @@ The agent returns a synthesized answer that addresses your original question. Wi
 
 ## Core Components Explained
 
-### Agent (ReAct Pattern)
+### Agent 
 The LLM that orchestrates everything. It reads tool descriptions, decides which tools to call, interprets results, and generates responses. Uses **conversation memory** to remember context within a session.
 
 ### Tools (Python Functions)
@@ -120,6 +138,7 @@ Stores conversation history in RAM using `InMemorySaver`. Allows follow-up quest
 ```bash
 pip install langchain langchain-openai langchain-community langgraph
 pip install chromadb sentence-transformers matplotlib pandas
+# etc...
 ```
 
 ### 2. Choose Your LLM
@@ -203,7 +222,7 @@ python agent.py
 
 ```
 SalesOS-Agent/
-├── agent.py                 # ReAct agent setup and main loop
+├── agent.py                 # agent setup and main loop
 ├── config.py                # LLM endpoint, paths, settings
 │
 ├── setup_sales_db.py        # Creates SQLite with fake data
@@ -222,16 +241,13 @@ SalesOS-Agent/
 ```
 
 **Start reading here:**
-1. `agent.py` lines 60-115 (system prompt - how agent uses tools)
+1. `agent.py` (system prompt - how agent uses tools)
 2. `tools/knowledge_tool.py` (simplest tool - RAG search)
-3. `tools/sales_tool.py` (shows nested LLM pattern)
+3. `tools/sales_tool.py` (LLM SQL calls)
 
 ---
 
 ## Key Design Choices (Why It's Built This Way)
-
-**Why nested LLM in SQL tool?**  
-Easier to understand as a separate step. In production, you'd use LangChain's SQL agent toolkit instead.
 
 **Why single agent, not multi-agent?**  
 Simpler to learn. Multi-agent adds complexity that obscures the core concepts.
@@ -240,10 +256,10 @@ Simpler to learn. Multi-agent adds complexity that obscures the core concepts.
 No server setup needed. Easy to inspect with `sqlite3 sales_db/sales_data.db`.
 
 **Why all-MiniLM-L6-v2 embeddings?**  
-Fast, small (80MB), good enough for learning. In production, you'd use larger models for better quality.
+Fast, small, good enough for learning. 
 
 **Why ChromaDB?**  
-Simple Python library, no separate server needed. Good for learning, scales to millions of vectors.
+Simple Python library, no separate server needed. Good for learning, can scale if needed.
 
 ---
 
@@ -271,7 +287,7 @@ Simple Python library, no separate server needed. Good for learning, scales to m
 
 **"No documents found"** → Put files in `kb/` folder and run `python setup_knowledge_base.py`
 
-**Agent gives wrong answers** → Try a better model (8B vs 3B parameters) or simplify your question
+**Agent gives wrong answers** → Try a different model (8B vs 3B parameters) or simplify your question
 
 ---
 
