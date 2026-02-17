@@ -4,6 +4,7 @@
 #####################
 
 import os
+from pathlib import Path
 import sqlite3
 import random
 from datetime import datetime, timedelta
@@ -13,7 +14,8 @@ fake = Faker()
 Faker.seed(42)  # Reproducible data
 random.seed(42)
 
-DB_PATH = "sales_db/sales_data.db"
+BASE_DIR = Path(__file__).parent  
+DB_PATH = str(BASE_DIR / "sales_db" / "sales_data.db")
 
 def create_database():
     """Create sales database with realistic schema"""
@@ -227,12 +229,13 @@ def populate_sales(conn, num_sales=500, products=None):
             discount = random.choices([0, 0.05, 0.10, 0.15, 0.20], weights=[60, 20, 10, 7, 3])[0]
             
             unit_price = base_price
-            item_total = unit_price * quantity * (1 - discount)
+            item_total = round(unit_price * quantity * (1 - discount), 2)
             total_amount += item_total
             
             sale_items.append((item_id, sale_id, product_id, quantity, unit_price, discount))
             item_id += 1
-        
+
+        total_amount = round(total_amount, 2)
         sales_data.append((sale_id, customer_id, sale_date, total_amount, status, sales_rep))
         items_data.extend(sale_items)
         sale_id += 1

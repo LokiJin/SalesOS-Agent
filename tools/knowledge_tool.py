@@ -70,20 +70,20 @@ def search_local_docs(query: str) -> str:
         vectorstore = _init_vectorstore()
         
 
-        # if DEBUG_MODE:
-        #      # Check collection
-        #     try:
-        #         doc_count = vectorstore._collection.count()
-        #         print(f"[RAG SEARCH] {doc_count} documents in collection")
-        #     except Exception as e:
-        #         print(f"[RAG SEARCH] Error checking document count: {e}")
+        if DEBUG_MODE:
+             # Check collection
+            try:
+                doc_count = vectorstore._collection.count()
+                print(f"[RAG SEARCH] {doc_count} documents in collection")
+            except Exception as e:
+                print(f"[RAG SEARCH] Error checking document count: {e}")
         
 
         # Search for relevant documents
         docs = vectorstore.similarity_search_with_score(query, k=TOP_K)
-     
-        # Filter out low-relevance documents
-        filtered_docs = [(doc, score) for doc, score in docs if score >= MIN_RAG_SCORE]
+
+        # Filter out low-relevance documents; lower score means more relevant (distance), so keep those <= threshold
+        filtered_docs = [(doc, score) for doc, score in docs if score <= MIN_RAG_SCORE]
 
         if not filtered_docs:
             if DEBUG_MODE:

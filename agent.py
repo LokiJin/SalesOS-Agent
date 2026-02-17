@@ -1,5 +1,5 @@
 """
-An AI assistant with sales intelligence and knowledge base capabilities
+An AI assistant with sales data and knowledge base capabilities
 """
 
 from typing import Optional, List
@@ -124,17 +124,13 @@ Tool Usage Limits:
 
 Example workflows:
 
-Q: "What were Q1 sales and did we hit our goal?"
-Step 1: query_sales_database("What were Q1 sales?") → Get actual: $271,680
-Step 2: search_local_docs("What was our Q1 sales goal?") → Get target: $15M
-Step 3: Compare and respond: "Sales were $271K vs goal of $15M (1.8% of target)"
-
 Q: "Who are our top customers and should we offer them discounts?"
 Step 1: query_sales_database("Top customers by revenue") → Get customer list
 Step 2: search_local_docs("discount policy") → Get approval guidelines
 Step 3: Synthesize: "Top customers are X, Y, Z. Per policy, Gold tier gets 10-20% off"
+Step 4: Create graph reporting on top customers 
 
-Always use multiple tools when questions have multiple components!
+Always use multiple tools when questions have multiple components.
 
 When answering:
 - Synthesize information clearly
@@ -186,39 +182,39 @@ def ask_agent(
         # Extract messages
         messages = result["messages"]
         
-        #show agent message flow in debug mode
-        # if DEBUG_MODE:
-        #     print("\n🧠 Agent Message Flow:")
-        #     print("=" * 60)
+        #show agent message and tool information when in debug mode
+        if DEBUG_MODE:
+            print("\n🧠 Agent Message Flow:")
+            print("=" * 60)
             
-        #     for i, msg in enumerate(messages):
-        #         msg_type = type(msg).__name__
-        #         print(f"\n[{i}] {msg_type}")
-        #         print("-" * 60)
+            for i, msg in enumerate(messages):
+                msg_type = type(msg).__name__
+                print(f"\n[{i}] {msg_type}")
+                print("-" * 60)
                 
-        #         # Show content (if exists)
-        #         if hasattr(msg, 'content') and msg.content:
-        #             content = str(msg.content)
-        #             # Truncate if too long
-        #             if len(content) > 200:
-        #                 print(f"Content: {content}...")
-        #             else:
-        #                 print(f"Content: {content}")
+                # Show content (if exists)
+                if hasattr(msg, 'content') and msg.content:
+                    content = str(msg.content)
+                    # Truncate if too long
+                    if len(content) > 200:
+                        print(f"Content: {content}...")
+                    else:
+                        print(f"Content: {content}")
                 
-        #         # Show tool calls (if exists)
-        #         if hasattr(msg, 'tool_calls') and msg.tool_calls:
-        #             print(f"Tool Calls: {len(msg.tool_calls)}")
-        #             for tc in msg.tool_calls:
-        #                 print(f"  → Tool: {tc['name']}")
-        #                 print(f"    Args: {tc['args']}")
+                # Show tool calls (if exists)
+                if hasattr(msg, 'tool_calls') and msg.tool_calls:
+                    print(f"Tool Calls: {len(msg.tool_calls)}")
+                    for tc in msg.tool_calls:
+                        print(f"  → Tool: {tc['name']}")
+                        print(f"    Args: {tc['args']}")
                 
-        #         # Show tool name and call ID (for ToolMessage)
-        #         if hasattr(msg, 'name'):
-        #             print(f"Tool Name: {msg.name}")
-        #         if hasattr(msg, 'tool_call_id'):
-        #             print(f"Tool Call ID: {msg.tool_call_id}")
+                # Show tool name and call ID (for ToolMessage)
+                if hasattr(msg, 'name'):
+                    print(f"Tool Name: {msg.name}")
+                if hasattr(msg, 'tool_call_id'):
+                    print(f"Tool Call ID: {msg.tool_call_id}")
             
-        #     print("\n" + "=" * 60 + "\n")
+            print("\n" + "=" * 60 + "\n")
         
         
         # Get final answer

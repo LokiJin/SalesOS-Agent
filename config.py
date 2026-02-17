@@ -55,7 +55,7 @@ SUPPORTED_FILE_TYPES = {
 CHUNK_SIZE = 500
 CHUNK_OVERLAP = 100
 TOP_K = 6  # Number of relevant chunks to retrieve for RAG
-MIN_RAG_SCORE = 0.3 # Minimum relevance score for RAG results (0.0-1.0)
+MIN_RAG_SCORE = 0.4 # Keep chunks with distance <= 0.3 (lower = better)
 
 # ============================================================================
 # Agent Configuration
@@ -76,6 +76,6 @@ DEFAULT_THREAD_ID = "default_user"
 
 BANNER = """
 ╔══════════════════════════════════════════════════════════╗                          
-║                 AI Agent with Sales Tools                ║
+║                 SalesOS Agent with Tools                 ║
 ╚══════════════════════════════════════════════════════════╝
 """
