@@ -17,7 +17,7 @@ The agent receives the prompt as plain text input.
 ### 2. LLM Decides What Tools to Use
 The agent sends the prompt and tool descriptions to the LLM. The LLM **reasons** about what information it needs: actual Q1 sales (database) and the Q1 target (documents). The LLM outputs which tools to call and with what parameters.
 
-### 3. Agent Calls the SQL Tool
+### 3. Agent Calls the SQL Tool 
 ```python
 @tool
 def query_sales_database(question: str) -> str:
