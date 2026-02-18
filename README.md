@@ -130,7 +130,7 @@ Stores conversation history in RAM using `InMemorySaver`. Allows follow-up quest
 You’ll need:
 
 - **Tested on Python 3.12.x, known dependency conflicts with 3.14+**
-- An LLM with API access that can use tools (Local LLM is a great option to explore, but you may already have API access to a cloud provider)
+- An LLM with an OpenAI-compatible API (Ollama, llama.cpp, OpenAI, or other compatible providers etc.)
 - Dependencies installed via pip
 
 ### 1. Clone the repo
@@ -161,9 +161,12 @@ export OPENAI_API_KEY="sk-..."
 
 **3B. Update `config.py`**
 
-Open `config.py` review defaults and set your:
-- `LLM_ENDPOINT` - Your LLM server endpoint (e.g., `http://localhost:11434/v1`, `https://api.openai.com/v1/`)
-- `MODEL_NAME` - Your model (e.g., `gpt-oss:20b` or `gpt-5.2`) 
+Open `config.py` review defaults and set:
+- `LLM_ENDPOINT` - Your LLM server endpoint
+  - Ollama: `http://localhost:11434/v1`
+  - llama.cpp: `http://localhost:8080/v1`
+  - OpenAI: `https://api.openai.com/v1`
+- `MODEL_NAME` - Your model (e.g., `gpt-oss:20b` for local, `gpt-5.2` for cloud) 
 
 ### 4. Set Up Data
 ```bash
@@ -263,7 +266,7 @@ SalesOS-Agent/
 
 **"No documents found"** → Put files in `kb/` folder and run `python setup_knowledge_base.py`
 
-**Agent gives wrong answers** → Try a different model (20B paramters vs trillions via cloud) or simplify your question
+**Agent gives wrong answers** → Try a different model (20B parameters vs trillions via cloud) or simplify your question
 
 ---
 
