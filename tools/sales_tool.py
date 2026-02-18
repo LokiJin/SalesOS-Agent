@@ -136,7 +136,6 @@ Key Relationships:
 - sales_items.product_id → products.product_id
 
 SQL Guidelines:
-- Filter sales by status = 'Completed' for actual revenue
 - The sales.total_amount column already includes all discounts (pre-calculated)
 - For revenue/totals: Use SUM(sales.total_amount) - fast and accurate
 - For product-level analysis: Join sales_items and calculate item revenue
@@ -157,7 +156,7 @@ Query Pattern Examples:
    WHERE s.status='Completed'
    
 3. Customer revenue → Use sales.total_amount:
-   SELECT c.customer_name, SUM(s.total_amount)
+   SELECT c.company, SUM(s.total_amount)
    FROM sales s JOIN customers c ON s.customer_id = c.customer_id
    WHERE s.status='Completed'
 """

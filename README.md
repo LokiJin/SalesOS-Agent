@@ -1,8 +1,16 @@
-# SalesOS-Agent 🤖
+# SalesOS-Agent 
 
-**Learn how AI agents use multiple tools to answer questions by building a working sales assistant.**
+**Learn how AI agents can use multiple tools to answer questions by building a working sales assistant.**
 
-This project provides a baseline to explore a few core concepts of agentic AI: how an LLM decides which tools to use, how vector search finds relevant documents, and how everything connects together. Not prod ready, just built for learning.
+**SalesOS-Agent** is an experimental AI-powered sales assistant built to explore how large language models can reason over databases, documents, and intelligent tools.
+
+It is a learning project not prod ready that incorporates:
+- smart SQL generation,
+- retrieval of content,
+- and agent decision-making  
+into a simple assistant that can answer sales questions.
+
+I built this to experiment, learn, and share ideas. If you’re curious how concepts like RAG and SQL tools work together with an agent, this repo provides a basic implementation.
 
 ---
 
@@ -82,7 +90,7 @@ The LLM combines both tool outputs to formulate a complete answer. It can do mat
 A: Q1 sales were $271K vs target of $15M (1.8% of goal).
    You fell short by $14.73M.
 ```
-The agent returns a synthesized answer that addresses your original question. With the `viz_tool.py` the agent may create a graph from SQL data in your charts/ folder. 
+The agent returns a synthesized answer that answers your original question. With the `viz_tool.py` the agent may create a graph from SQL data in your charts/ folder. 
 
 ---
 
@@ -107,10 +115,10 @@ Stores document embeddings and enables fast similarity search. Uses **HNSW algor
 Converts text to vectors. Similar meanings produce similar vectors. Example: "sales target" and "revenue goal" have close vectors even though they share no words. The model (`all-MiniLM-L6-v2`) was trained on millions of sentences to learn these semantic relationships.
 
 ### Visualization Tool
-Non-LLM tool that takes data (typically SQL results), converts to charts using matplotlib, and saves PNG files. Shows that tools don't have to call LLMs—they can be simple functions.
+Tool that takes data (typically SQL results), converts to charts using matplotlib, and saves PNG files. Shows that tools can be simple functions without LLM calls.
 
 ### System Prompt
-Instructions that tell the agent how to use tools. Explains which tools have what data, gives examples of multi-tool workflows, and sets behavior guidelines. The agent follows these instructions but isn't perfect—more capable LLMs follow prompts better.
+Instructions that tell the agent how to use tools. Explains which tools have what data, gives examples of multi-tool workflows, and sets behavior guidelines. The agent follows these instructions but isn't perfect.
 
 ### Checkpointer (Memory)
 Stores conversation history in RAM using `InMemorySaver`. Allows follow-up questions like "What about just Europe?" after asking about customers. Memory resets when you restart the program.
@@ -119,18 +127,30 @@ Stores conversation history in RAM using `InMemorySaver`. Allows follow-up quest
 
 ## Quick Start
 
-### 1. Install Dependencies
+You’ll need:
+
+- **Tested on Python 3.12.x, known dependency conflicts with 3.14+**
+- An LLM with API access that can use tools (Local LLM is a great option to explore, but you may already have API access to a cloud provider)
+- Dependencies installed via pip
+
+### 1. Clone the repo
 ```bash
-pip install langchain langchain-openai langchain-community langgraph
-pip install chromadb sentence-transformers matplotlib pandas
-# etc...
+git clone https://github.com/LokiJin/SalesOS-Agent
+cd SalesOS-Agent
 ```
 
-### 2. Choose Your LLM
-
-**Local (Ollama - easiest)(llama.cpp works well for me):**
+### 2. Install Python requirements
 ```bash
-ollama pull llama3.2:3b
+pip install -r requirements.txt
+```
+
+### 3. Choose Your LLM Server and Model
+
+**3A. Start your LLM server**
+
+**Local (Ollama - easiest)(llama.cpp - a great alternative):**
+```bash
+ollama pull gpt-oss:20b
 ollama serve
 ```
 
@@ -139,22 +159,24 @@ ollama serve
 export OPENAI_API_KEY="sk-..."
 ```
 
-Edit `config.py` with your endpoint and model name.
+**3B. Update `config.py`**
 
-### 3. Set Up Data
+Open `config.py` review defaults and set your:
+- `LLM_ENDPOINT` - Your LLM server endpoint (e.g., `http://localhost:11434/v1`, `https://api.openai.com/v1/`)
+- `MODEL_NAME` - Your model (e.g., `gpt-oss:20b` or `gpt-5.2`) 
+
+### 4. Set Up Data
 ```bash
 # Create fake sales database (200 customers, 500 transactions)
 python setup_sales_db.py
 
 # Add documents to kb/ folder or just use the existing ones
-mkdir -p kb
-echo "Q1 Sales Target: $15M" > kb/targets.txt
 
-# Convert documents to vectors
+# Convert kb/ documents to vectors
 python setup_knowledge_base.py
 ```
 
-### 4. Run Agent
+### 5. Run the Agent
 ```bash
 python agent.py
 ```
@@ -173,7 +195,7 @@ python agent.py
 
 **Multi-Tool Reasoning:** How agents combine information from multiple sources (database + documents) to answer complex questions.
 
-**LangChain Patterns:** How the ReAct agent pattern works, how tools are defined with `@tool`, and how conversation memory is managed.
+**LangChain:** How tools are defined with `@tool`, and how conversation memory is managed.
 
 ---
 
@@ -212,6 +234,7 @@ SalesOS-Agent/
 │
 ├── setup_sales_db.py        # Creates SQLite with fake data
 ├── setup_knowledge_base.py  # Converts docs → vectors
+├── rag_metadata.py          # Metadata class for ChromaDB setup
 │
 ├── tools/
 │   ├── sales_tool.py        # SQL query tool (nested LLM)
@@ -232,19 +255,6 @@ SalesOS-Agent/
 
 ---
 
-## Key Design Choices (Why It's Built This Way)
-
-**Why single agent, not multi-agent?**  
-Simpler to learn. Multi-agent adds complexity that obscures the core concepts, though I will be looking into multi-agent soon!
-
-**Why SQLite?**  
-No server setup needed. Easy to inspect `sqlite3 sales_db/sales_data.db`.
-
-**Why ChromaDB?**  
-Simple Python library, no separate server needed. Good for learning, can scale if needed.
-
----
-
 ## Common Issues
 
 **"No data in database"** → Run `python setup_sales_db.py` first
@@ -253,7 +263,7 @@ Simple Python library, no separate server needed. Good for learning, can scale i
 
 **"No documents found"** → Put files in `kb/` folder and run `python setup_knowledge_base.py`
 
-**Agent gives wrong answers** → Try a different model (8B vs 3B parameters) or simplify your question
+**Agent gives wrong answers** → Try a different model (20B paramters vs trillions via cloud) or simplify your question
 
 ---
 
@@ -261,11 +271,11 @@ Simple Python library, no separate server needed. Good for learning, can scale i
 
 Maybe you can:
 - Add your own tools (email sender, API caller, etc.)
-- Experiment with different embedding models
+- Experiment with different embedding and LLM models
 - Try LangGraph for multi-agent workflows
-- Implement proper error handling and logging
-- Build a web UI with Streamlit or FastAPI
+- Implement error handling and logging
 - Tune the system prompts for better performance
+- Build a web UI
 
 ---
 
