@@ -8,34 +8,16 @@ This project provides a baseline to explore a few core concepts of agentic AI: h
 
 ## How It Works: Step-by-Step 
 
-### 1. You Ask a Question
+### 1. You Ask a Question 
 ```
 User: "Did we hit our Q1 2025 sales target?"
 ```
-The agent receives the prompt as plain text input.
+The agent receives the prompt as plain text.
 
 ### 2. LLM Decides What Tools to Use
-The agent sends the prompt and tool descriptions to the LLM. The LLM **reasons** about what information it needs: actual Q1 sales (database) and the Q1 target (documents). The LLM outputs which tools to call and with what parameters.
+The agent sends the prompt and tool descriptions to the LLM. The LLM **reasons** about what information it needs: actual Q1 sales (database) and the Q1 goals (documents). The LLM outputs which tools to call and with what parameters.
 
-Agent (LangChain)          LLM (AI Model)
-     |                          |
-     |---(Question + Tools)---->|
-     |                          | [Thinks: I need SQL tool first]
-     |<---(Call SQL tool)-------|
-     |                          |
-[Executes SQL tool]             |
-     |                          |
-     |---(SQL results)--------->|
-     |                          | [Thinks: Now I need RAG tool]
-     |<---(Call RAG tool)-------|
-     |                          |
-[Executes RAG tool]             |
-     |                          |
-     |---(RAG results)--------->|
-     |                          | [Thinks: Now I can answer]
-     |<---(Final answer)--------|
-
-### 3. Agent Calls the SQL Tool
+### 3. Agent Calls the SQL Tool 
 ```python
 @tool
 def query_sales_database(question: str) -> str:
@@ -80,8 +62,11 @@ Q1 2025 Company Goals
 Revenue Targets
 
 New Business Goal:** $12M  
+Expansion Revenue (Upsells/Cross-sells) Goal: $3M  
+
+**Total Q1 Target:** $15M
 ```
-The tool returns the most relevant document sections with their similarity scores. Lower scores mean more relevant (closer in vector space).
+The tool returns the most relevant document sections with their similarity scores. Lower scores in this setup mean more relevant (closer in vector space). Some frameworks use cosine similarity where you typically want a value as close to 1 as possible for most relevant results.
 
 ### 9. Agent Synthesizes the Answer
 ```python
@@ -101,7 +86,7 @@ The agent returns a synthesized answer that addresses your original question. Wi
 
 ---
 
-## Core Components Explained
+## Core Components
 
 ### Agent 
 The LLM that orchestrates everything. It reads tool descriptions, decides which tools to call, interprets results, and generates responses. Uses **conversation memory** to remember context within a session.
@@ -143,13 +128,13 @@ pip install chromadb sentence-transformers matplotlib pandas
 
 ### 2. Choose Your LLM
 
-**Local (Ollama - easiest):**
+**Local (Ollama - easiest)(llama.cpp works well for me):**
 ```bash
 ollama pull llama3.2:3b
 ollama serve
 ```
 
-**Or use cloud API:**
+**Or use cloud LLM provider via API:**
 ```bash
 export OPENAI_API_KEY="sk-..."
 ```
@@ -161,7 +146,7 @@ Edit `config.py` with your endpoint and model name.
 # Create fake sales database (200 customers, 500 transactions)
 python setup_sales_db.py
 
-# Add documents to kb/ folder
+# Add documents to kb/ folder or just use the existing ones
 mkdir -p kb
 echo "Q1 Sales Target: $15M" > kb/targets.txt
 
@@ -250,13 +235,10 @@ SalesOS-Agent/
 ## Key Design Choices (Why It's Built This Way)
 
 **Why single agent, not multi-agent?**  
-Simpler to learn. Multi-agent adds complexity that obscures the core concepts.
+Simpler to learn. Multi-agent adds complexity that obscures the core concepts, though I will be looking into multi-agent soon!
 
 **Why SQLite?**  
-No server setup needed. Easy to inspect with `sqlite3 sales_db/sales_data.db`.
-
-**Why all-MiniLM-L6-v2 embeddings?**  
-Fast, small, good enough for learning. 
+No server setup needed. Easy to inspect `sqlite3 sales_db/sales_data.db`.
 
 **Why ChromaDB?**  
 Simple Python library, no separate server needed. Good for learning, can scale if needed.
@@ -283,11 +265,12 @@ Maybe you can:
 - Try LangGraph for multi-agent workflows
 - Implement proper error handling and logging
 - Build a web UI with Streamlit or FastAPI
+- Tune the system prompts for better performance
 
 ---
 
 ## License
 
-MIT - Use this to learn and build your own projects.
+MIT License - Use this to learn and build your own projects.
 
 **Built for learning agentic AI concepts, not for production use.** 
