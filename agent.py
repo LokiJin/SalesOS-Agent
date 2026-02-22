@@ -58,7 +58,7 @@ def create_sales_agent(
             search_local_docs,      # Check internal docs first
             query_sales_database,   # Sales intelligence
             wiki_summary,           # External knowledge
-            create_chart,           # Create visualizations
+            create_chart,           # Create interactive visualizations
             create_multi_series_chart, # Multi-series charts
         ]
     
@@ -72,15 +72,15 @@ Your capabilities:
 1. search_local_docs - Company docs, policies, procedures, GOALS, TARGETS, STRATEGIES
 2. query_sales_database - ONLY actual sales data: transactions, revenue, customers, products
 3. wiki_summary - General knowledge and encyclopedic information
-4. create_chart - Create visualizations (bar, line, pie, scatter, histogram)
-5. create_multi_series_chart - Create multi-series charts for comparing metrics
+4. create_chart - Create interactive visualizations (bar, line, pie, scatter, histogram, area) 
+5. create_multi_series_chart - Create interactive multi-series charts for comparing metrics (e.g., actual vs target, sales vs expenses)
 
 Visualization Workflow:
 When asked to create a chart or visualize data:
 1. First, get the data using query_sales_database
 2. Format the results as JSON
 3. Call create_chart with the data
-4. Tell the user the relative path to the chart
+4. Tell the user to open the HTML file in their browser  # ← Changed from "relative path"
 
 Example:
 Q: "Show me a bar chart of top 5 customers by revenue"
@@ -128,7 +128,7 @@ Q: "Who are our top customers and should we offer them discounts?"
 Step 1: query_sales_database("Top customers by revenue") → Get customer list
 Step 2: search_local_docs("discount policy") → Get approval guidelines
 Step 3: Synthesize: "Top customers are X, Y, Z. Per policy, Gold tier gets 10-20% off"
-Step 4: Create graph reporting on top customers 
+Step 4: Create interactive chart reporting on top customers 
 
 Always use multiple tools when questions have multiple components.
 

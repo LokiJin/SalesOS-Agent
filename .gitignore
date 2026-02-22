@@ -4,6 +4,7 @@ chroma_db/
 sales_db/
 charts/
 *.docx
+.matplotviz_tool.py
 
 # Compiled source #
 ###################

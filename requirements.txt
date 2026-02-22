@@ -29,3 +29,5 @@ Faker==40.4.0
 
 # OpenAI SDK (used under the hood by langchain-openai)
 openai==2.14.0
+
+altair>=5.0.0
