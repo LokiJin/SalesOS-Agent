@@ -2,7 +2,8 @@
 An AI assistant with sales data and knowledge base capabilities 
 """
 
-from typing import Optional, List
+from typing import Optional, List, Generator
+import uuid
 from langchain_openai import ChatOpenAI
 from langchain.agents import create_agent
 from langchain_core.messages import HumanMessage
@@ -11,7 +12,7 @@ from langgraph.checkpoint.memory import InMemorySaver
 # Import configuration
 from config import (
     MODEL_NAME, LLAMA_SERVER_URL, DEFAULT_TEMPERATURE, 
-    DEFAULT_MAX_TOKENS, DEFAULT_THREAD_ID, DEBUG_MODE, BANNER
+    DEFAULT_MAX_TOKENS, DEBUG_MODE, BANNER
 )
 
 # Import tools
@@ -48,7 +49,6 @@ def create_sales_agent(
         model=model_name,
         temperature=temperature,
         base_url=base_url,
-        streaming=True,
         max_tokens=DEFAULT_MAX_TOKENS
     )
     
@@ -116,7 +116,8 @@ Multi-tool examples:
 - "Compare actual to budget" → query_sales_database + search_local_docs
 
 Tool Usage Limits:
-- Call each tool at most one per question unless new information is required.
+- Use each tool only once unless additional data is clearly required.
+- Do not repeat the same tool call with slightly modified wording
 - If a search does not return relevant new information, do NOT retry with similar wording.
 - If monthly targets are not explicitly found, state that no monthly targets are defined.
 - Do not rephrase and repeat the same search query.
@@ -154,7 +155,7 @@ When answering:
 def ask_agent(
     agent, 
     question: str, 
-    thread_id: str = DEFAULT_THREAD_ID,
+    thread_id: Optional[str] = None,
     verbose: bool = True
 ) -> str:
     """
@@ -168,12 +169,13 @@ def ask_agent(
     Returns:
         Agent's answer
     """
-    
+    # Ensure each conversation has a unique thread ID
+    if not thread_id:
+        thread_id = str(uuid.uuid4())
+    # Configure LangGraph memory with the correct thread
+    config = {"configurable": {"thread_id": thread_id}}
+
     try:
-        # Configure conversation thread
-        config = {"configurable": {"thread_id": thread_id}}
-        
-        # Invoke agent
         result = agent.invoke(
             {"messages": [HumanMessage(content=question)]},
             config
@@ -244,6 +246,8 @@ def main():
     agent = create_sales_agent()
     print("✅ Agent ready!\n")
     
+    session_thread_id = str(uuid.uuid4())
+
     while True:
         try:
             user_input = input("Prompt: ").strip()
@@ -268,7 +272,7 @@ def main():
                 continue
             
             # Ask agent
-            ask_agent(agent, user_input)
+            ask_agent(agent, user_input, thread_id=session_thread_id) #ask_agent(agent, user_input)
             
         except KeyboardInterrupt:
             print("\n👋 Goodbye!")

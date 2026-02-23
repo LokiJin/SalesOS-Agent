@@ -1,0 +1,253 @@
+"""
+FastAPI Web Interface for Sales Agent
+Run with: uvicorn api:app --reload
+Access at: http://127.0.0.1:8000
+"""
+
+from fastapi import FastAPI, HTTPException, Request
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import StreamingResponse, HTMLResponse
+from fastapi.staticfiles import StaticFiles
+from datetime import datetime
+from pydantic import BaseModel
+from typing import Optional, List, Dict
+import json
+import uvicorn
+import asyncio
+import uuid
+from pathlib import Path
+from contextlib import asynccontextmanager
+
+# Import agent
+from agent import create_sales_agent, ask_agent #stream_agent
+
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    print("🔧 Initializing agent...")
+    app.state.agent = create_sales_agent()
+    print("✅ Agent ready!")
+    yield
+    print("🛑 Shutting down...")
+
+app = FastAPI(
+    title="Sales Agent API",
+    description="AI assistant with sales data and knowledge base capabilities",
+    version="0.1",
+    lifespan=lifespan
+)
+
+# Enable CORS for local development
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://127.0.0.1:8000", "http://localhost:8000"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# Request/Response models
+class QuestionRequest(BaseModel):
+    question: str
+    thread_id: Optional[str] = None
+    
+
+class QuestionResponse(BaseModel):
+    answer: str
+    thread_id: str
+    timestamp: str
+
+
+class HealthResponse(BaseModel):
+    status: str
+    agent_ready: bool
+
+
+# API Endpoints
+@app.get("/", response_class=HTMLResponse)
+async def root():
+    """Serve the web interface"""
+    html_file = Path(__file__).parent / "static" / "index.html"
+    if html_file.exists():
+        return html_file.read_text(encoding="utf-8")
+    else:
+        return """
+        <html>
+            <body>
+                <h1>Sales Agent API</h1>
+                <p>API is running. Create static/index.html for the web interface.</p>
+                <p>Or use the API directly:</p>
+                <ul>
+                <li>GET /health - Check API status</li>
+                <li>POST /ask - Ask the agent a question</li>
+                <li>POST /ask/stream - Ask the agent with streaming response</li>
+                <li>GET /tools - List available tools</li>
+                <li>GET /docs - Interactive API documentation</li>
+                </ul>
+            </body>
+        </html>
+        """
+
+
+@app.get("/health", response_model=HealthResponse)
+async def health_check(request: Request):
+    """Health check endpoint"""
+    return HealthResponse(
+        status="healthy",
+        agent_ready=hasattr(request.app.state, "agent") and request.app.state.agent is not None
+    )
+
+
+@app.post("/ask", response_model=QuestionResponse)
+async def ask_question(request_data: QuestionRequest, request: Request):
+    """
+    Ask the agent a question
+    
+    Example:
+    ```
+    POST /ask
+    {
+        "question": "What were our top customers in Q1?",
+        "thread_id": "user123"
+    }
+    ```
+    """
+    agent = request.app.state.agent
+    if agent is None:
+        raise HTTPException(status_code=503, detail="Agent not initialized")
+
+    # Ensure a thread_id exists
+    thread_id = request_data.thread_id or str(uuid.uuid4())
+
+    try:
+        loop = asyncio.get_running_loop()
+        answer = await loop.run_in_executor(
+            None,
+            ask_agent,
+            agent,
+            request_data.question,
+            thread_id,
+            False
+        )
+
+        return QuestionResponse(
+            answer=answer,
+            thread_id=thread_id,
+            timestamp=datetime.now().isoformat()
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    
+
+# @app.post("/ask/stream")
+# async def ask_question_stream(request_data: QuestionRequest, request: Request):
+#     """
+#     Ask the agent a question with streaming response (Server-Sent Events)
+#     """
+
+#     agent = request.app.state.agent
+    
+#     if agent is None:
+#         raise HTTPException(status_code=503, detail="Agent not initialized")
+
+#     thread_id = request_data.thread_id or str(uuid.uuid4())
+
+#     async def event_generator():
+#         try:
+#             loop = asyncio.get_running_loop()
+
+#             queue = asyncio.Queue()
+
+#             def run_stream():
+#                 try:
+#                     for token in stream_agent(
+#                         agent,
+#                         request_data.question,
+#                         thread_id
+#                     ):
+#                         asyncio.run_coroutine_threadsafe(
+#                             queue.put(token),
+#                             loop
+#                         )
+#                 finally:
+#                     asyncio.run_coroutine_threadsafe(
+#                         queue.put(None),
+#                         loop
+#                     )
+
+#             # Run in background thread
+#             asyncio.get_event_loop().run_in_executor(None, run_stream)
+
+#             # Yield tokens as they arrive
+#             while True:
+#                 token = await queue.get()
+#                 if token is None:
+#                     break
+
+#                 yield f"data: {json.dumps({'type': 'token', 'content': token})}\n\n"
+
+#             yield f"data: {json.dumps({'type': 'done', 'thread_id': thread_id})}\n\n"
+
+#         except Exception as e:
+#             yield f"data: {json.dumps({'type': 'error', 'message': str(e)})}\n\n"
+
+#     return StreamingResponse(event_generator(), media_type="text/event-stream")
+
+
+@app.get("/tools")
+async def list_tools(request: Request):
+    """List available tools"""
+    agent = request.app.state.agent
+    if agent is None:
+        raise HTTPException(status_code=503, detail="Agent not initialized")
+    
+    return {
+        "tools": [
+            {
+                "name": "query_sales_database",
+                "description": "Query sales data using natural language",
+                "examples": [
+                    "What were total sales in Q1?",
+                    "Who are our top 5 customers?"
+                ]
+            },
+            {
+                "name": "search_local_docs",
+                "description": "Search company knowledge base",
+                "examples": [
+                    "What is our discount policy?",
+                    "What are our Q1 sales goals?"
+                ]
+            },
+            {
+                "name": "wiki_summary",
+                "description": "Get Wikipedia summaries",
+                "examples": [
+                    "Who is Elon Musk?",
+                    "What is quantum computing?"
+                ]
+            },
+            {
+                "name": "create_chart",
+                "description": "Create interactive visualizations",
+                "examples": [
+                    "Show me a bar chart of top customers",
+                    "Create a line chart of monthly revenue"
+                ]
+            },
+            {
+                "name": "create_multi_series_chart",
+                "description": "Create multi-series charts for comparing metrics",
+                "examples": [
+                    "Compare sales vs targets by month",
+                    "Visualize revenue vs expenses"
+                ]
+            }
+        ]
+    }
+
+
+# Run with: uvicorn api:app --reload --host 127.0.0.1 --port 8000
+if __name__ == "__main__":
+    uvicorn.run(app, host="127.0.0.1", port=8000)
