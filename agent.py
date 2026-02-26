@@ -12,7 +12,7 @@ from langgraph.checkpoint.memory import InMemorySaver
 # Import configuration
 from config import (
     MODEL_NAME, LLAMA_SERVER_URL, DEFAULT_TEMPERATURE, 
-    DEFAULT_MAX_TOKENS, DEBUG_MODE, BANNER
+    DEFAULT_MAX_TOKENS, DEBUG_MODE, BANNER, validate_config
 )
 
 # Import tools
@@ -43,6 +43,10 @@ def create_sales_agent(
     Returns:
         Configured agent
     """
+    
+    # Validate configuration before initializing
+    if not validate_config():
+        raise RuntimeError("Configuration validation failed. See errors above.")
     
     # Initialize LLM
     llm = ChatOpenAI(
@@ -80,58 +84,14 @@ When asked to create a chart or visualize data:
 1. First, get the data using query_sales_database
 2. Format the results as JSON
 3. Call create_chart with the data
-4. Tell the user to open the HTML file in their browser  # ← Changed from "relative path"
+4. The tool will save the chart and return the file path
 
-Example:
-Q: "Show me a bar chart of top 5 customers by revenue"
-
-Step 1: query_sales_database("SELECT c.company, SUM(s.total_amount) as revenue 
-                               FROM sales s JOIN customers c ON s.customer_id=c.customer_id 
-                               WHERE s.status='Completed' 
-                               GROUP BY c.company 
-                               ORDER BY revenue DESC LIMIT 5")
-→ Returns: [{'company': 'Acme Corp', 'revenue': 50000}, ...]
-
-Step 2: create_chart(
-    data='[{"company": "Acme Corp", "revenue": 50000}, ...]',
-    chart_type="bar",
-    title="Top 5 Customers by Revenue",
-    x_label="Customer",
-    y_label="Revenue ($)"
-)
-→ Returns: "Chart saved to: charts/bar_20250216_143022.png"
-
-Step 3: Respond to user with chart location relative path and summary
-
-Tool Usage Guidelines:
-- Sales DATABASE contains: transactions, revenue, customers, products, quantities
-- Sales DATABASE does NOT contain: goals, targets, quotas, strategies, plans
-- For goals/targets/quotas → ALWAYS use search_local_docs
-- For actual sales numbers → use query_sales_database
-- If question asks for BOTH (e.g., "sales vs goal") → use BOTH tools
-
-Multi-tool examples:
-- "Sales in Q1 and our goal" → query_sales_database + search_local_docs
-- "Did we hit our target?" → query_sales_database + search_local_docs
-- "Compare actual to budget" → query_sales_database + search_local_docs
-
-Tool Usage Limits:
-- Use each tool only once unless additional data is clearly required.
-- Do not repeat the same tool call with slightly modified wording
-- If a search does not return relevant new information, do NOT retry with similar wording.
-- If monthly targets are not explicitly found, state that no monthly targets are defined.
-- Do not rephrase and repeat the same search query.
-- If results are similar to a previous tool call, proceed to final answer.
-
-Example workflows:
-
-Q: "Who are our top customers and should we offer them discounts?"
-Step 1: query_sales_database("Top customers by revenue") → Get customer list
-Step 2: search_local_docs("discount policy") → Get approval guidelines
-Step 3: Synthesize: "Top customers are X, Y, Z. Per policy, Gold tier gets 10-20% off"
-Step 4: Create interactive chart reporting on top customers 
-
-Always use multiple tools when questions have multiple components.
+Decision-Making Guidelines:
+- For questions about GOALS, TARGETS, STRATEGIES → Use search_local_docs
+- For questions about actual SALES, REVENUE, CUSTOMERS → Use query_sales_database
+- For general knowledge → Use wiki_summary
+- If you need BOTH actual data and goals, call BOTH tools
+- Always explain your reasoning
 
 When answering:
 - Synthesize information clearly
@@ -199,7 +159,7 @@ def ask_agent(
                     content = str(msg.content)
                     # Truncate if too long
                     if len(content) > 200:
-                        print(f"Content: {content}...")
+                        print(f"Content: {content[:200]}...")
                     else:
                         print(f"Content: {content}")
                 
@@ -236,6 +196,50 @@ def ask_agent(
         return error_msg
 
 
+def stream_agent(
+    agent,
+    question: str,
+    thread_id: Optional[str] = None
+) -> Generator[str, None, None]:
+    """
+    Stream agent responses token by token.
+    
+    Args:
+        agent: The agent instance
+        question: User's question
+        thread_id: Conversation thread identifier
+        
+    Yields:
+        Content chunks from the agent's response
+    """
+    if not thread_id:
+        thread_id = str(uuid.uuid4())
+    
+    config = {"configurable": {"thread_id": thread_id}}
+    
+    try:
+        # Stream events from the agent
+        # Note: LangGraph's stream() yields complete messages, not individual tokens
+        # For true token streaming, you'd need to use the LLM's streaming API directly
+        for event in agent.stream(
+            {"messages": [HumanMessage(content=question)]},
+            config,
+            stream_mode="values"
+        ):
+            # Get the last message from the event
+            if "messages" in event and event["messages"]:
+                last_message = event["messages"][-1]
+                
+                # Only yield content from AI messages
+                if hasattr(last_message, 'content') and last_message.content:
+                    # Check if this is a new message (not a tool call)
+                    if not hasattr(last_message, 'tool_calls') or not last_message.tool_calls:
+                        yield last_message.content
+                    
+    except Exception as e:
+        yield f"Error: {str(e)}"
+
+
 def main():
     """Main interactive loop"""
     
@@ -243,8 +247,12 @@ def main():
     
     # Create agent
     print("🔧 Initializing agent...")
-    agent = create_sales_agent()
-    print("✅ Agent ready!\n")
+    try:
+        agent = create_sales_agent()
+        print("✅ Agent ready!\n")
+    except Exception as e:
+        print(f"❌ Failed to initialize agent: {e}")
+        return
     
     session_thread_id = str(uuid.uuid4())
 
@@ -272,7 +280,7 @@ def main():
                 continue
             
             # Ask agent
-            ask_agent(agent, user_input, thread_id=session_thread_id) #ask_agent(agent, user_input)
+            ask_agent(agent, user_input, thread_id=session_thread_id)
             
         except KeyboardInterrupt:
             print("\n👋 Goodbye!")

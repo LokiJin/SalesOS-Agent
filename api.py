@@ -1,7 +1,5 @@
 """
-FastAPI Web Interface for Sales Agent
-Run with: uvicorn api:app --reload
-Access at: http://127.0.0.1:8000
+FastAPI Web Interface for SalesOS Agent
 """
 
 from fastapi import FastAPI, HTTPException, Request
@@ -19,22 +17,29 @@ from pathlib import Path
 from contextlib import asynccontextmanager
 
 # Import agent
-from agent import create_sales_agent, ask_agent #stream_agent
-
+from agent import create_sales_agent, ask_agent, stream_agent
+from config import REQUEST_TIMEOUT, FRONTEND_HOST, FRONTEND_PORT
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    """Application lifespan management"""
     print("🔧 Initializing agent...")
-    app.state.agent = create_sales_agent()
-    print("✅ Agent ready!")
+    try:
+        app.state.agent = create_sales_agent()
+        print("✅ Agent ready!")
+    except Exception as e:
+        print(f"❌ Failed to initialize agent: {e}")
+        app.state.agent = None
+    
     yield
+    
     print("🛑 Shutting down...")
 
 app = FastAPI(
     title="Sales Agent API",
     description="AI assistant with sales data and knowledge base capabilities",
-    version="0.1",
+    version="0.2",
     lifespan=lifespan
 )
 
@@ -122,13 +127,18 @@ async def ask_question(request_data: QuestionRequest, request: Request):
 
     try:
         loop = asyncio.get_running_loop()
-        answer = await loop.run_in_executor(
-            None,
-            ask_agent,
-            agent,
-            request_data.question,
-            thread_id,
-            False
+        
+        # Add timeout to prevent hanging requests
+        answer = await asyncio.wait_for(
+            loop.run_in_executor(
+                None,
+                ask_agent,
+                agent,
+                request_data.question,
+                thread_id,
+                False
+            ),
+            timeout=REQUEST_TIMEOUT
         )
 
         return QuestionResponse(
@@ -136,63 +146,95 @@ async def ask_question(request_data: QuestionRequest, request: Request):
             thread_id=thread_id,
             timestamp=datetime.now().isoformat()
         )
+        
+    except asyncio.TimeoutError:
+        raise HTTPException(
+            status_code=504,
+            detail=f"Request timed out after {REQUEST_TIMEOUT} seconds. Please try a simpler question."
+        )
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
     
 
-# @app.post("/ask/stream")
-# async def ask_question_stream(request_data: QuestionRequest, request: Request):
-#     """
-#     Ask the agent a question with streaming response (Server-Sent Events)
-#     """
-
-#     agent = request.app.state.agent
+@app.post("/ask/stream")
+async def ask_question_stream(request_data: QuestionRequest, request: Request):
+    """
+    Ask the agent a question with streaming response (Server-Sent Events)
     
-#     if agent is None:
-#         raise HTTPException(status_code=503, detail="Agent not initialized")
+    Example:
+    ```
+    POST /ask/stream
+    {
+        "question": "What were our top customers in Q1?",
+        "thread_id": "user123"
+    }
+    ```
+    
+    Response format:
+    ```
+    data: {"type": "content", "data": "..."}
+    data: {"type": "done", "thread_id": "user123"}
+    ```
+    """
+    agent = request.app.state.agent
+    
+    if agent is None:
+        raise HTTPException(status_code=503, detail="Agent not initialized")
 
-#     thread_id = request_data.thread_id or str(uuid.uuid4())
+    thread_id = request_data.thread_id or str(uuid.uuid4())
 
-#     async def event_generator():
-#         try:
-#             loop = asyncio.get_running_loop()
+    async def event_generator():
+        try:
+            # Run stream_agent in executor since it's synchronous
+            loop = asyncio.get_running_loop()
+            
+            # Create a queue for thread-safe communication
+            queue = asyncio.Queue()
+            
+            def run_stream():
+                try:
+                    for chunk in stream_agent(agent, request_data.question, thread_id):
+                        # Put each chunk in the queue
+                        asyncio.run_coroutine_threadsafe(queue.put(chunk), loop)
+                except Exception as e:
+                    asyncio.run_coroutine_threadsafe(
+                        queue.put({"error": str(e)}), loop
+                    )
+                finally:
+                    # Signal completion
+                    asyncio.run_coroutine_threadsafe(queue.put(None), loop)
+            
+            # Start streaming in background thread
+            loop.run_in_executor(None, run_stream)
+            
+            # Yield chunks as they arrive
+            while True:
+                chunk = await queue.get()
+                
+                if chunk is None:
+                    # Stream complete
+                    yield f"data: {json.dumps({'type': 'done', 'thread_id': thread_id})}\n\n"
+                    break
+                
+                if isinstance(chunk, dict) and "error" in chunk:
+                    yield f"data: {json.dumps({'type': 'error', 'message': chunk['error']})}\n\n"
+                    break
+                    
+                # Yield the content chunk
+                yield f"data: {json.dumps({'type': 'content', 'data': chunk})}\n\n"
+                
+        except Exception as e:
+            yield f"data: {json.dumps({'type': 'error', 'message': str(e)})}\n\n"
 
-#             queue = asyncio.Queue()
-
-#             def run_stream():
-#                 try:
-#                     for token in stream_agent(
-#                         agent,
-#                         request_data.question,
-#                         thread_id
-#                     ):
-#                         asyncio.run_coroutine_threadsafe(
-#                             queue.put(token),
-#                             loop
-#                         )
-#                 finally:
-#                     asyncio.run_coroutine_threadsafe(
-#                         queue.put(None),
-#                         loop
-#                     )
-
-#             # Run in background thread
-#             asyncio.get_event_loop().run_in_executor(None, run_stream)
-
-#             # Yield tokens as they arrive
-#             while True:
-#                 token = await queue.get()
-#                 if token is None:
-#                     break
-
-#                 yield f"data: {json.dumps({'type': 'token', 'content': token})}\n\n"
-
-#             yield f"data: {json.dumps({'type': 'done', 'thread_id': thread_id})}\n\n"
-
-#         except Exception as e:
-#             yield f"data: {json.dumps({'type': 'error', 'message': str(e)})}\n\n"
-
-#     return StreamingResponse(event_generator(), media_type="text/event-stream")
+    return StreamingResponse(
+        event_generator(),
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "Connection": "keep-alive",
+            "X-Accel-Buffering": "no"  # Disable nginx buffering
+        }
+    )
 
 
 @app.get("/tools")
