@@ -5,10 +5,8 @@ sales_db/
 charts/
 logs/
 *.docx
-.stream_index.html
 .matplotviz_tool.py
-.buindex.html
-index copy.html
+
 
 # Compiled source #
 ###################

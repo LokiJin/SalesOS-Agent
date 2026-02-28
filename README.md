@@ -4,17 +4,25 @@
 
 **SalesOS-Agent** is an experimental AI-powered sales assistant built to explore how large language models can reason over databases, documents, and intelligent tools.
 
-It is a learning project not prod ready that incorporates:
+<p align="center">
+  <img src="images/ui.png" alt="Screenshot" width="800"/>
+</p>
+
+It is a learning project that is built for local development that incorporates:
 - smart SQL generation,
 - retrieval of content,
 - and agent decision-making  
 into a simple assistant that can answer sales questions.
 
-I built this to experiment, learn, and share ideas. If you’re curious how concepts like RAG and SQL tools work together with an agent, this repo provides a basic implementation.
+I built this to experiment, learn, and share ideas. If you're curious how concepts like RAG and SQL tools work together with an agent, this repo provides a basic implementation.
 
 ---
 
 ## How It Works: Step-by-Step 
+
+<p align="center">
+  <img src="images/overview.png" alt="Screenshot" width="800"/>
+</p>
 
 ### 1. You Ask a Question 
 ```
@@ -60,7 +68,7 @@ The agent realizes it also needs the sales target, so it calls the document sear
 ```python
 docs = vectorstore.similarity_search_with_score(query, k=6)
 ```
-Documents in the "kb/" folder were converted to **vector embeddings** (arrays of numbers that represent meaning) when you ran `setup_knowledge_base.py`. The query is also converted to a vector, then ChromaDB finds the "TOP_K" most similar document chunks using **vector distance** In other words it measures how close vectors are in mathematical space, which corresponds to semantic similarity. The closer the distance between the points, the more they are similar.
+Documents in the "kb/" folder were converted to **vector embeddings** (arrays of numbers that represent meaning) when you ran `setup_knowledge_base.py`. The query is also converted to a vector, then ChromaDB finds the "TOP_K" most similar document chunks using **vector distance**. In other words it measures how close vectors are in mathematical space, which corresponds to semantic similarity. The closer the distance between the points, the more they are similar.
 
 ### 8. Retrieval Augmented Generation (RAG) Returns Relevant Chunks
 ```
@@ -97,7 +105,7 @@ The agent returns a synthesized answer that answers your original question. With
 ## Core Components
 
 ### Agent 
-The LLM that orchestrates everything. It reads tool descriptions, decides which tools to call, interprets results, and generates responses. Uses **conversation memory** to remember context within a session.
+The agent orchestrates everything, think of it as the main script. It reads tool descriptions, decides which tools to call, interprets results, and generates responses. Uses **conversation memory** to remember context within a session.
 
 ### Tools (Python Functions)
 Python functions decorated with `@tool` that the agent can call. Each tool has a name, description, and parameters that the agent reads to decide when to use it. Tools return strings that the agent can reason about.
@@ -115,7 +123,7 @@ Stores document embeddings and enables fast similarity search. Uses **HNSW algor
 Converts text to vectors. Similar meanings produce similar vectors. Example: "sales target" and "revenue goal" have close vectors even though they share no words. The model (`all-MiniLM-L6-v2`) was trained on millions of sentences to learn these semantic relationships.
 
 ### Visualization Tool
-Tool that takes data (typically SQL results), converts to charts using matplotlib, and saves PNG files. Shows that tools can be simple functions without LLM calls.
+Tool that takes data (typically SQL results), converts to charts using Altair, and saves interactive html files. Demonstrates that that tools can be simple functions without LLM calls.
 
 ### System Prompt
 Instructions that tell the agent how to use tools. Explains which tools have what data, gives examples of multi-tool workflows, and sets behavior guidelines. The agent follows these instructions but isn't perfect.
@@ -127,7 +135,7 @@ Stores conversation history in RAM using `InMemorySaver`. Allows follow-up quest
 
 ## Quick Start
 
-You’ll need:
+You'll need:
 
 - **Tested on Python 3.12.x, known dependency conflicts with 3.14+**
 - An LLM with an OpenAI-compatible API (Ollama, llama.cpp, OpenAI, or other compatible providers etc.)
@@ -180,9 +188,78 @@ python setup_knowledge_base.py
 ```
 
 ### 5. Run the Agent
+
+**Option A: Command Line Interface (CLI)**
 ```bash
 python agent.py
 ```
+
+**Option B: Web User Interface (Recommended)**
+```bash
+# Start the FastAPI server
+python api.py
+
+# Or use uvicorn directly
+uvicorn api:app --reload --host 127.0.0.1 --port 8000
+```
+
+Then open your browser to: **http://127.0.0.1:8000**
+
+---
+
+## Web User Interface
+
+The web UI provides a modern, professional interface for interacting with the SalesOS Agent. It features:
+
+- **Real-time Streaming Responses**: Watch the AI think and respond in real-time with typewriter effect
+- **Dark Mode Design**: Professional, easy-on-the-eyes interface
+- **Conversation History**: Full conversation context maintained during your session
+- **Interactive Charts**: Visualizations are saved to the `charts/` folder and can be opened directly
+- **Markdown Support**: Responses are formatted with proper markdown rendering
+
+### Starting the Web Interface
+
+1. **Ensure your LLM server is running** (see step 3 above)
+
+2. **Ensure data is set up** (see step 4 above)
+
+3. **Start the API server**:
+   ```bash
+   python api.py
+   ```
+   
+   The server will start on `http://127.0.0.1:8000` and you'll see:
+   ```
+   🔧 Initializing agent...
+   ✅ Agent ready!
+   INFO:     Uvicorn running on http://127.0.0.1:8000
+   ```
+
+4. **Open your browser** and navigate to:
+   ```
+   http://127.0.0.1:8000
+   ```
+
+### Web UI Features
+
+**Streaming Mode (Default)**
+- Responses appear in real-time as the AI generates them
+- Typewriter effect shows thinking process
+- Live status indicators show when streaming is active
+- Response times displayed after completion
+
+**Quick Actions**
+- Pre-configured example queries to get started quickly
+- Click any quick action to try common questions
+
+**Conversation Memory**
+- Follow-up questions maintain context
+- Ask "What about just Europe?" after asking about customers
+- Memory persists for your browser session
+
+**Debug Panel (Left Sidebar)**
+- Displays response timing
+- Real-time status indicators
 
 ---
 
@@ -199,6 +276,8 @@ python agent.py
 **Multi-Tool Reasoning:** How agents combine information from multiple sources (database + documents) to answer complex questions.
 
 **LangChain:** How tools are defined with `@tool`, and how conversation memory is managed.
+
+**Web APIs:** How to expose AI agents through REST APIs with FastAPI and streaming responses.
 
 ---
 
@@ -232,7 +311,8 @@ python agent.py
 
 ```
 SalesOS-Agent/
-├── agent.py                 # agent setup and main loop
+├── agent.py                 # Agent setup and main loop (CLI)
+├── api.py                   # FastAPI web server
 ├── config.py                # LLM endpoint, paths, settings
 │
 ├── setup_sales_db.py        # Creates SQLite with fake data
@@ -242,19 +322,24 @@ SalesOS-Agent/
 ├── tools/
 │   ├── sales_tool.py        # SQL query tool (nested LLM)
 │   ├── knowledge_tool.py    # RAG search with vector similarity
-│   ├── viz_tool.py          # Chart creation (matplotlib)
+│   ├── viz_tool.py          # Chart creation (Altair)
 │   └── web_tools.py         # Wikipedia lookup
+│
+├── static/
+│   └── index.html           # Web UI interface
 │
 ├── kb/                      # Put your documents here
 ├── sales_db/                # Generated SQLite database
 ├── chroma_db/               # Generated vector database
-└── charts/                  # Generated PNG charts
+└── charts/                  # Generated interactive charts (HTML)
 ```
 
 **Start reading here:**
 1. `agent.py` (system prompt - how agent uses tools)
-2. `tools/knowledge_tool.py` (simplest tool - RAG search)
-3. `tools/sales_tool.py` (LLM SQL calls)
+2. `api.py` (web API implementation)
+3. `tools/knowledge_tool.py` (simplest tool - RAG search)
+4. `tools/sales_tool.py` (LLM SQL calls)
+5. `static/index.html` (web interface)
 
 ---
 
@@ -268,6 +353,12 @@ SalesOS-Agent/
 
 **Agent gives wrong answers** → Try a different model (20B parameters vs trillions via cloud) or simplify your question
 
+**Web UI not loading** → Ensure FastAPI server is running: `python api.py`
+
+**CORS errors in browser** → The API server allows localhost origins by default. If using a different host, update CORS settings in `api.py`
+
+**Streaming not working** → Check browser console for errors. Ensure your LLM supports streaming responses.
+
 ---
 
 ## Next Steps
@@ -278,7 +369,10 @@ Maybe you can:
 - Try LangGraph for multi-agent workflows
 - Implement error handling and logging
 - Tune the system prompts for better performance
-- Build a web UI
+- Enhance the web UI with more features
+- Add authentication and user management
+- Deploy to a cloud platform (AWS, GCP, Azure)
+- Create mobile apps using the API
 
 ---
 
@@ -286,4 +380,4 @@ Maybe you can:
 
 MIT License - Use this to learn and build your own projects.
 
-**Built for learning agentic AI concepts, not for production use.** 
+**Built for learning agentic AI concepts, not for production use.**
