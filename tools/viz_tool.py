@@ -31,15 +31,22 @@ def create_chart(
 ) -> str:
     """
     Create an interactive HTML chart from data.
-    
+
     This tool takes data (typically from SQL query results) and creates 
-    interactive visualizations. Charts include zoom, pan, and hover tooltips.
-    
+    interactive visualizations using Altair. Charts include zoom, pan, and hover tooltips.
+
     Args:
         data: JSON string containing the data. Should be a list of dictionaries.
-              Example: '[{"month": "Jan", "sales": 1000}, {"month": "Feb", "sales": 1500}]'
-              Or dict format: '{"Jan": 1000, "Feb": 1500}'
-        
+            Example: '[{"month": "Jan", "sales": 1000}, {"month": "Feb", "sales": 1500}]'
+            Or dict format: '{"Jan": 1000, "Feb": 1500}'
+            - Column names may contain special characters; escape any colons with '\\:'
+            - Data types must be inferred or specified: 
+                * Quantitative (numeric) -> Q
+                * Nominal (categorical) -> N
+                * Ordinal (ordered categorical) -> O
+                * Temporal (dates/times) -> T
+                * Geospatial (maps) -> G
+
         chart_type: Type of chart to create. Options:
             - "bar": Vertical bar chart (good for comparing categories)
             - "line": Line chart (good for trends over time)
@@ -47,15 +54,20 @@ def create_chart(
             - "scatter": Scatter plot (good for relationships)
             - "histogram": Histogram (good for distributions)
             - "area": Area chart (good for cumulative trends)
-        
+
         title: Title for the chart
         x_label: Label for x-axis (optional)
         y_label: Label for y-axis (optional)
         filename: Custom filename (optional, auto-generated if not provided)
-    
+
     Returns:
         Path to the saved HTML chart file with instructions to open in browser
-    
+
+    Notes:
+        - Always map each column to the correct Altair type (Q, O, N, T, G)
+        - Escape column names with colons using '\\:'
+        - If data is a dict, convert it into a list of dicts for Altair
+
     Examples:
         create_chart(
             data='[{"customer": "Acme Corp", "revenue": 50000}, {"customer": "TechCo", "revenue": 75000}]',

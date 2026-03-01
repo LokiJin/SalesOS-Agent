@@ -4,17 +4,18 @@ FastAPI Web Interface for SalesOS Agent
 
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import StreamingResponse, HTMLResponse
-from fastapi.staticfiles import StaticFiles
+from fastapi.responses import StreamingResponse, HTMLResponse, JSONResponse
 from datetime import datetime
 from pydantic import BaseModel
-from typing import Optional, List, Dict
+from typing import Optional 
 import json
 import uvicorn
 import asyncio
 import uuid
 from pathlib import Path
 from contextlib import asynccontextmanager
+
+from utils.logger import setup_logging, get_logger
 
 # Import agent
 from agent import create_sales_agent, ask_agent, stream_agent
@@ -24,17 +25,24 @@ from config import REQUEST_TIMEOUT, FRONTEND_HOST, FRONTEND_PORT
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Application lifespan management"""
-    print("🔧 Initializing agent...")
+    
+    setup_logging()
+    logger = get_logger(__name__)
+
+    logger.info("Initializing agent...")
     try:
         app.state.agent = create_sales_agent()
-        print("✅ Agent ready!")
+       
+        logger.info("Agent ready")
     except Exception as e:
-        print(f"❌ Failed to initialize agent: {e}")
+        
+        logger.exception("Failed to initialize agent")
         app.state.agent = None
     
     yield
-    
-    print("🛑 Shutting down...")
+
+    logger.info("Shutting down")
+   
 
 app = FastAPI(
     title="Sales Agent API",
@@ -42,6 +50,42 @@ app = FastAPI(
     version="0.2",
     lifespan=lifespan
 )
+
+
+@app.exception_handler(Exception)
+async def global_exception_handler(request: Request, exc: Exception):
+    logger = get_logger(__name__)
+
+    logger.error(
+        f"Unhandled exception on {request.url}",
+        exc_info=True
+    )
+
+    return JSONResponse(
+        status_code=500,
+        content={"detail": "Internal server error"}
+    )
+
+@app.middleware("http")
+async def log_requests(request: Request, call_next):
+    logger = get_logger(__name__)
+
+    logger.info(f"{request.method} {request.url.path} started")
+
+    try:
+        response = await call_next(request)
+        logger.info(
+            f"{request.method} {request.url.path} completed "
+            f"with status {response.status_code}"
+        )
+        return response
+
+    except Exception:
+        logger.exception(
+            f"{request.method} {request.url.path} failed"
+        )
+        raise
+
 
 # Enable CORS for local development
 app.add_middleware(
@@ -184,6 +228,8 @@ async def ask_question_stream(request_data: QuestionRequest, request: Request):
     thread_id = request_data.thread_id or str(uuid.uuid4())
 
     async def event_generator():
+        start_time = asyncio.get_running_loop().time()
+
         try:
             # Run stream_agent in executor since it's synchronous
             loop = asyncio.get_running_loop()
@@ -197,18 +243,28 @@ async def ask_question_stream(request_data: QuestionRequest, request: Request):
                         # Put each chunk in the queue
                         asyncio.run_coroutine_threadsafe(queue.put(chunk), loop)
                 except Exception as e:
-                    asyncio.run_coroutine_threadsafe(
-                        queue.put({"error": str(e)}), loop
-                    )
+                    try:
+                        asyncio.run_coroutine_threadsafe(
+                            queue.put({"error": str(e)}), loop
+                        )
+                    except RuntimeError:
+                        pass
                 finally:
                     # Signal completion
                     asyncio.run_coroutine_threadsafe(queue.put(None), loop)
             
             # Start streaming in background thread
-            loop.run_in_executor(None, run_stream)
+            future = loop.run_in_executor(None, run_stream)
             
             # Yield chunks as they arrive
             while True:
+                if await request.is_disconnected():
+                    break
+
+                if asyncio.get_running_loop().time() - start_time > REQUEST_TIMEOUT:
+                    yield f"data: {json.dumps({'type': 'error', 'message': 'Streaming timeout'})}\n\n"
+                    break
+
                 chunk = await queue.get()
                 
                 if chunk is None:
@@ -223,6 +279,9 @@ async def ask_question_stream(request_data: QuestionRequest, request: Request):
                 # Yield the content chunk
                 yield f"data: {json.dumps({'type': 'content', 'data': chunk})}\n\n"
                 
+            if not future.done():
+                future.cancel()
+
         except Exception as e:
             yield f"data: {json.dumps({'type': 'error', 'message': str(e)})}\n\n"
 

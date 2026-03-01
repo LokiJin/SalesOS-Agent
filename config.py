@@ -32,8 +32,8 @@ LLAMA_SERVER_URL = "http://localhost:8080/v1/"
 MODEL_NAME = "gpt-oss-20b-Q4_K_M.gguf"
 
 # LLM parameters
-DEFAULT_TEMPERATURE = 0.1
-DEFAULT_MAX_TOKENS = 5000
+DEFAULT_TEMPERATURE = 1.0
+DEFAULT_MAX_TOKENS = 6000
 
 # ============================================================================
 # Frontend API Configuration
@@ -46,7 +46,7 @@ FRONTEND_PORT = "8000"
 # RAG Configuration
 # ============================================================================
 
-RAG_AVAILABLE = True
+RAG_AVAILABLE = True  
 EMBEDDING_MODEL = "sentence-transformers/all-MiniLM-L6-v2"
 
 # Supported file types for document ingestion
@@ -64,7 +64,7 @@ SUPPORTED_FILE_TYPES = {
 # Text splitting parameters
 CHUNK_SIZE = 500
 CHUNK_OVERLAP = 100
-TOP_K = 6  # Number of relevant chunks to retrieve for RAG
+TOP_K = 5  # Number of relevant chunks to retrieve for RAG
 MIN_RAG_SCORE = 0.4 # Keep chunks with distance <= this value (lower = better)
 
 # ============================================================================
